@@ -16,6 +16,7 @@
     "ww-app": "file:"
   },
   "devDependencies": {
+    "@next/eslint-plugin-next": "^15.1.6",
     "@skoolab/eslint-config": "^1.0.3",
     "@types/node": "^20",
     "@types/react": "^19",

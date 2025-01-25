@@ -1,4 +1,7 @@
-"use client";
-export default function Home() {
-  return <div>oi</div>;
+'use client'
+
+function Home(): React.JSX.Element {
+  return <div>oi</div>
 }
+
+export { Home }

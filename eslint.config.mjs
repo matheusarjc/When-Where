@@ -1,24 +1,24 @@
-import { dirname } from "path";
-import { fileURLToPath } from "url";
-import { FlatCompat } from "@eslint/eslintrc";
-import skoolabConfig from "@skoolab/eslint-config";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+import js from '@eslint/js'
+import { FlatCompat } from '@eslint/eslintrc'
+import skoolabConfig from '@skoolab/eslint-config'
 
 const compat = new FlatCompat({
-  baseDirectory: __dirname,
-});
+  baseDirectory: import.meta.dirname,
+  recommendedConfig: js.configs.recommended,
+})
 
 const eslintConfig = [
-  ...compat.extends("next/core-web-vitals", "next/typescript"),
+  ...compat.config({
+    extends: ['plugin:@next/next/recommended'],
+  }),
   ...skoolabConfig,
   {
-    files: ["commitlint.config.js"],
+    files: ['commitlint.config.js'],
     rules: {
-      "import/no-anonymous-default-export": "off",
+      'import/no-anonymous-default-export': 'off',
     },
   },
-];
+  { rules: { 'custom/no-direct-return': 'off' } },
+]
 
-export default eslintConfig;
+export default eslintConfig
