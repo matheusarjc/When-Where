@@ -3,6 +3,7 @@ import React from "react";
 import StyledComponentsRegistry from "./registry";
 import { Roboto } from "next/font/google";
 import ThemeProvider from "@/styles/ThemeProvider";
+import { AuthProvider } from "@/context/AuthContext";
 
 const roboto = Roboto({
   weight: "400",
@@ -20,7 +21,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" className={roboto.className}>
       <body>
         <StyledComponentsRegistry>
-          <ThemeProvider>{children}</ThemeProvider>
+          <ThemeProvider>
+            <AuthProvider>{children}</AuthProvider>
+          </ThemeProvider>
         </StyledComponentsRegistry>
       </body>
     </html>
