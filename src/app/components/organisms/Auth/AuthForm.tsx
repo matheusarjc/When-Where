@@ -5,15 +5,7 @@ import { useState, useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import styled from "styled-components";
 import Button from "../../atoms/Button/page";
-import { FormBase, RowContainer } from "../../molecules/StylesPallete";
-
-const Container = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 100vh;
-`;
+import { ContainerBody, FormBase, RowContainer, Title } from "../../molecules/StylesPallete";
 
 const Input = styled.input`
   width: 100%;
@@ -30,6 +22,13 @@ const ToggleText = styled.p`
   &:hover {
     text-decoration: underline;
   }
+`;
+
+const BoxForm = styled.div`
+  background-color: aqua;
+  padding: 2.5rem;
+  display: flex;
+  flex-direction: column;
 `;
 
 export default function AuthForm() {
@@ -58,49 +57,51 @@ export default function AuthForm() {
   };
 
   return (
-    <Container>
-      <h1>{isLogin ? "Login" : "Cadastro"}</h1>
-      <FormBase onSubmit={handleSubmit}>
-        {isLogin ? (
-          ""
-        ) : (
-          <RowContainer>
-            <Input
-              type="text"
-              placeholder="Username"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              required
-            />
-            <Input
-              type="text"
-              placeholder="Nome"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-            />
-          </RowContainer>
-        )}
+    <ContainerBody>
+      <BoxForm>
+        <Title>{isLogin ? "Login" : "Cadastro"}</Title>
+        <FormBase onSubmit={handleSubmit}>
+          {isLogin ? (
+            ""
+          ) : (
+            <RowContainer>
+              <Input
+                type="text"
+                placeholder="Username"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                required
+              />
+              <Input
+                type="text"
+                placeholder="Nome"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required
+              />
+            </RowContainer>
+          )}
 
-        <Input
-          type="email"
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-        />
-        <Input
-          type="password"
-          placeholder="Senha"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-        />
-        <Button type="submit">{isLogin ? "Entrar" : "Cadastrar"}</Button>
-      </FormBase>
-      <ToggleText onClick={() => setIsLogin(!isLogin)}>
-        {isLogin ? "Ainda não tem uma conta? Cadastre-se" : "Já tem uma conta? Faça login"}
-      </ToggleText>
-    </Container>
+          <Input
+            type="email"
+            placeholder="Email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
+          <Input
+            type="password"
+            placeholder="Senha"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
+          <Button type="submit">{isLogin ? "Entrar" : "Cadastrar"}</Button>
+        </FormBase>
+        <ToggleText onClick={() => setIsLogin(!isLogin)}>
+          {isLogin ? "Ainda não tem uma conta? Cadastre-se" : "Já tem uma conta? Faça login"}
+        </ToggleText>
+      </BoxForm>
+    </ContainerBody>
   );
 }

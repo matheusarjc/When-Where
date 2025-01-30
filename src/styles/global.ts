@@ -1,6 +1,7 @@
 "use client";
 
 import { createGlobalStyle } from "styled-components";
+import "./global.module.css";
 
 const GlobalStyle = createGlobalStyle`
   * {
@@ -13,10 +14,10 @@ const GlobalStyle = createGlobalStyle`
     background-color: ${({ theme }) => theme.colors.background};
     padding: ${({ theme }) => theme.screen.xs};
     color: ${({ theme }) => theme.colors.text};
+    font-family: 'Poppins', serif;
   }
 
   button {
-    font-family: inherit;
     cursor: pointer;
   }
 `;
