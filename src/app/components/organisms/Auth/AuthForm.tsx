@@ -6,29 +6,100 @@ import { useRouter, usePathname } from "next/navigation";
 import styled from "styled-components";
 import Button from "../../atoms/Button/page";
 import { ContainerBody, FormBase, RowContainer, Title } from "../../molecules/StylesPallete";
+import { FcGoogle } from "react-icons/fc";
+import { FaApple } from "react-icons/fa";
 
 const Input = styled.input`
   width: 100%;
-  padding: 10px;
+  padding: 14px;
   margin: 10px 0;
   border: 1px solid #ccc;
-  border-radius: 5px;
+  border-radius: 0.5rem;
+  font-size: 14px;
+  background-color: ${({ theme }) => theme.colors.inputBackground};
+  color: ${({ theme }) => theme.colors.text};
+
+  &::placeholder {
+    font-size: 14px;
+    color: gray;
+  }
+
+  &:focus {
+    outline: none;
+    border: 2px solid ${({ theme }) => theme.colors.greenLight};
+    box-shadow: 0px 0px 5px rgba(17, 222, 89, 0.5);
+  }
 `;
 
 const ToggleText = styled.p`
   margin-top: 10px;
+  font-size: small;
   cursor: pointer;
-  color: ${({ theme }) => theme.colors.primary};
+  color: ${({ theme }) => theme.colors.white};
+  text-align: center;
   &:hover {
     text-decoration: underline;
   }
 `;
 
 const BoxForm = styled.div`
-  background-color: aqua;
-  padding: 2.5rem;
+  background-color: ${({ theme }) => theme.colors.backgroundBox};
   display: flex;
   flex-direction: column;
+  border-radius: 10px;
+  width: 100%;
+  max-width: 400px;
+  text-align: center;
+`;
+
+const SocialDiv = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+`;
+
+const SocialButton = styled.button`
+  width: 100%;
+  padding: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  font-size: 16px;
+  border: none;
+  cursor: pointer;
+  font-weight: bold;
+  gap: 10px;
+`;
+
+const GoogleButton = styled(SocialButton)`
+  background-color: white;
+  color: black;
+`;
+
+const AppleButton = styled(SocialButton)`
+  background-color: black;
+  color: white;
+`;
+
+const Separator = styled.div`
+  text-align: center;
+  margin: 10px 0;
+  font-size: 10px;
+  color: ${({ theme }) => theme.colors.white};
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 50%;
+
+  &::before,
+  &::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: ${({ theme }) => theme.colors.white};
+    margin: 0 10px;
+  }
 `;
 
 export default function AuthForm() {
@@ -59,11 +130,12 @@ export default function AuthForm() {
   return (
     <ContainerBody>
       <BoxForm>
-        <Title>{isLogin ? "Login" : "Cadastro"}</Title>
+        <Title>{isLogin ? "Get your trip plans with you!" : "Create an Account"}</Title>
+        <p style={{ color: "gray", fontSize: "14px", marginBottom: "20px" }}>
+          {isLogin ? "Log in or sign up" : "Sign up to get started"}
+        </p>
         <FormBase onSubmit={handleSubmit}>
-          {isLogin ? (
-            ""
-          ) : (
+          {!isLogin && (
             <RowContainer>
               <Input
                 type="text"
@@ -74,14 +146,13 @@ export default function AuthForm() {
               />
               <Input
                 type="text"
-                placeholder="Nome"
+                placeholder="Name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 required
               />
             </RowContainer>
           )}
-
           <Input
             type="email"
             placeholder="Email"
@@ -91,13 +162,27 @@ export default function AuthForm() {
           />
           <Input
             type="password"
-            placeholder="Senha"
+            placeholder="Password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
           />
-          <Button type="submit">{isLogin ? "Entrar" : "Cadastrar"}</Button>
+          <Button type="submit">{isLogin ? "Continue" : "Sign Up"}</Button>
         </FormBase>
+
+        <Separator>Or</Separator>
+
+        <SocialDiv>
+          <GoogleButton>
+            <FcGoogle size={22} />
+            Continue with Google
+          </GoogleButton>
+          <AppleButton>
+            <FaApple size={22} />
+            Continue with Apple
+          </AppleButton>
+        </SocialDiv>
+
         <ToggleText onClick={() => setIsLogin(!isLogin)}>
           {isLogin ? "Ainda não tem uma conta? Cadastre-se" : "Já tem uma conta? Faça login"}
         </ToggleText>

@@ -15,6 +15,7 @@ const GlobalStyle = createGlobalStyle`
     padding: ${({ theme }) => theme.screen.xs};
     color: ${({ theme }) => theme.colors.text};
     font-family: 'Poppins', serif;
+    overflow: hidden;
   }
 
   button {
