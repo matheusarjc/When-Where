@@ -83,7 +83,7 @@ export default function HomePage() {
   return (
     <ContainerBody>
       <Title>Bem-vindo ao Cronômetro de Viagens</Title>
-      <p>Logado como: {user?.email}</p> {/* Mostra o email do usuário autenticado */}
+      <p>Logado como: {user?.displayName}</p>
       {eventName && <h2>Evento: {eventName}</h2>}
       {eventDate && <CountdownTimer targetDate={eventDate} />}
       <BoxFlexed flexDirection={"column"}>
