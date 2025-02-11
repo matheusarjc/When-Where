@@ -7,7 +7,7 @@ import styled from "styled-components";
 import Button from "../../atoms/Button/page";
 import { ContainerBody, FormBase, RowContainer, Title } from "../../molecules/StylesPallete";
 import { FcGoogle } from "react-icons/fc";
-import { FaApple } from "react-icons/fa";
+import { FaGithub } from "react-icons/fa";
 
 const Input = styled.input`
   width: 100%;
@@ -50,6 +50,11 @@ const BoxForm = styled.div`
   width: 100%;
   max-width: 400px;
   text-align: center;
+  padding: 0; /* Padrão para mobile */
+
+  @media (min-width: 768px) {
+    padding: 2rem 0; /* Apenas no desktop */
+  }
 `;
 
 const SocialDiv = styled.div`
@@ -77,8 +82,8 @@ const GoogleButton = styled(SocialButton)`
   color: black;
 `;
 
-const AppleButton = styled(SocialButton)`
-  background-color: black;
+const GithubButton = styled(SocialButton)`
+  background-color: #333;
   color: white;
 `;
 
@@ -103,7 +108,7 @@ const Separator = styled.div`
 `;
 
 export default function AuthForm() {
-  const { user, login, signup } = useAuth();
+  const { user, login, signup, loginWithGoogle, loginWithGithub } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
   const [isLogin, setIsLogin] = useState(true);
@@ -173,14 +178,14 @@ export default function AuthForm() {
         <Separator>Or</Separator>
 
         <SocialDiv>
-          <GoogleButton>
+          <GoogleButton onClick={loginWithGoogle}>
             <FcGoogle size={22} />
             Continue with Google
           </GoogleButton>
-          <AppleButton>
-            <FaApple size={22} />
-            Continue with Apple
-          </AppleButton>
+          <GithubButton onClick={loginWithGithub}>
+            <FaGithub size={22} />
+            Continue with GitHub
+          </GithubButton>
         </SocialDiv>
 
         <ToggleText onClick={() => setIsLogin(!isLogin)}>

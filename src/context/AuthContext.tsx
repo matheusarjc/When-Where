@@ -10,15 +10,18 @@ import {
   User,
   updateProfile,
   getIdToken,
+  signInWithPopup,
 } from "firebase/auth";
 import { useRouter } from "next/navigation";
-import { auth } from "@/lib/firebaseConfig";
+import { auth, githubProvider, googleProvider } from "@/lib/firebaseConfig";
 
 interface AuthContextType {
   user: User | null;
   token: string | null;
   login: (email: string, password: string) => Promise<void>;
   signup: (email: string, password: string, username: string, name: string) => Promise<void>;
+  loginWithGoogle: () => Promise<void>;
+  loginWithGithub: () => Promise<void>;
   logout: () => void;
 }
 
@@ -104,6 +107,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const loginWithGoogle = async () => {
+    try {
+      const result = await signInWithPopup(auth, googleProvider);
+      console.log("Usuário logado com Google:", result.user);
+      router.push("/Home");
+    } catch (error) {
+      console.error("Erro ao fazer login com Google:", error);
+    }
+  };
+
+  const loginWithGithub = async () => {
+    try {
+      const result = await signInWithPopup(auth, githubProvider);
+      console.log("Usuário logado com GitHub:", result.user);
+      router.push("/Home");
+    } catch (error) {
+      console.error("Erro ao fazer login com GitHub:", error);
+    }
+  };
+
   const logout = () => {
     signOut(auth);
     setUser(null);
@@ -116,7 +139,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, token, login, signup, logout }}>
+    <AuthContext.Provider
+      value={{ user, token, login, signup, loginWithGoogle, loginWithGithub, logout }}>
       {children}
     </AuthContext.Provider>
   );
