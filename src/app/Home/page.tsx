@@ -2,97 +2,139 @@
 
 import { useState, useEffect } from "react";
 import Button from "../components/atoms/Button/page";
+import ModalStep from "../components/molecules/ModalStep";
 import CountdownTimer from "../components/organisms/CountdownTimer/page";
-import { ContainerBody, Title } from "../components/molecules/StylesPallete";
-import { useAuth } from "@/context/AuthContext"; // 🚀 Importa autenticação
+import {
+  Box_1,
+  BoxPosition,
+  Centralized,
+  Container,
+  Title,
+} from "../components/molecules/StylesPallete";
+import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 import { deleteDoc, doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
 import { db } from "@/lib/firebaseConfig";
-import BoxFlexed from "../components/molecules/DivsPallete";
+import { EventName } from "./StylePage";
+import {
+  Action,
+  Blocked,
+  LockedInput,
+  LockedInputContainer,
+  LockIcon,
+  Logout,
+} from "../components/atoms/Button/Button";
 
 export default function HomePage() {
   const [eventDate, setEventDate] = useState<string | null>(null);
-  const [eventName, setEventName] = useState<string | null>("Meu Evento");
-  const { user, logout } = useAuth(); // 🚀 Adiciona o logout
+  const [eventName, setEventName] = useState<string | null>(null);
+  const [eventStatus, setEventStatus] = useState<"no-event" | "active" | "expired">("no-event");
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const { user, logout } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
     if (!user) {
-      router.push("/"); // Se não estiver logado, redireciona para login
+      router.push("/"); // Redireciona para login se não estiver autenticado
     } else {
       fetchEventDate();
     }
   }, [user, router]);
 
+  // 🔥 Função para buscar o evento no Firebase
   const fetchEventDate = async () => {
     if (!user) return;
     const eventRef = doc(db, "events", user.uid);
     const eventSnap = await getDoc(eventRef);
 
     if (eventSnap.exists()) {
-      setEventDate(eventSnap.data().date);
-      setEventName(eventSnap.data().name);
+      const eventData = eventSnap.data();
+      setEventDate(eventData.date);
+      setEventName(eventData.name);
     }
   };
 
-  // Salvar eventos
-  const saveEventDate = async (date: string, p0?: string) => {
+  // 🔥 Salvar Evento no Firestore (Nome e Data)
+  const saveEvent = async (name: string, date: string) => {
     if (!user) return;
 
     const eventRef = doc(db, "events", user.uid);
-    await setDoc(eventRef, { date });
+    await setDoc(eventRef, { name, date });
+
+    setEventName(name);
     setEventDate(date);
   };
 
-  const handleEditDate = async () => {
-    const newDate = prompt("Digite a nova data do evento (YYYY-MM-DD HH:MM)", eventDate || "");
-    if (newDate && user) {
-      const eventRef = doc(db, "events", user.uid);
-      await updateDoc(eventRef, { date: newDate });
-      setEventDate(newDate);
-    }
-  };
+  useEffect(() => {
+    if (eventDate) {
+      const eventTime = new Date(eventDate).getTime();
+      const currentTime = new Date().getTime();
 
-  const handleEditName = async () => {
-    const newName = prompt("Digite o novo nome do evento", eventName || "Meu Evento");
-    if (newName && user) {
-      const eventRef = doc(db, "events", user.uid);
-      await updateDoc(eventRef, { name: newName });
-      setEventName(newName);
+      setEventStatus(currentTime >= eventTime ? "expired" : "active");
+    } else {
+      setEventStatus("no-event");
     }
+  }, [eventDate]);
+
+  const handleEditEvent = async (newName: string, newDate: string) => {
+    if (!user) return;
+    const eventRef = doc(db, "events", user.uid);
+    await updateDoc(eventRef, { name: newName, date: newDate });
+
+    setEventName(newName);
+    setEventDate(newDate);
   };
 
   const handleDeleteEvent = async () => {
     if (!user) return;
-    const confirmDelete = confirm("Tem certeza que deseja excluir este evento?");
-    if (confirmDelete) {
+    if (confirm("Tem certeza que deseja excluir este evento?")) {
       const eventRef = doc(db, "events", user.uid);
       await deleteDoc(eventRef);
-      setEventDate(null);
       setEventName(null);
-    }
-  };
-
-  const handleStartTimer = () => {
-    const userDate = prompt("Digite a data do evento (YYYY-MM-DD HH:MM)");
-    if (userDate) {
-      saveEventDate(userDate);
+      setEventDate(null);
+      setEventStatus("no-event");
     }
   };
 
   return (
-    <ContainerBody>
-      <Title>Bem-vindo ao Cronômetro de Viagens</Title>
-      <p>Logado como: {user?.displayName}</p>
-      {eventName && <h2>Evento: {eventName}</h2>}
-      {eventDate && <CountdownTimer targetDate={eventDate} />}
-      <BoxFlexed flexDirection={"column"}>
-        <Button onClick={handleStartTimer}>Criar Evento Padrão (Teste)</Button>
-        <Button onClick={handleEditDate}>Editar Data do Evento</Button>
-        <Button onClick={handleEditName}>Editar Nome do Evento</Button>
-        <Button onClick={handleDeleteEvent}>Excluir Evento</Button>
-        <Button onClick={logout}>Sair</Button>
-      </BoxFlexed>
-    </ContainerBody>
+    <Container>
+      <BoxPosition>
+        <Title>Bem-vindo ao Cronômetro de Viagens</Title>
+        <p>Logado como: {user?.displayName}</p>
+
+        <Centralized>
+          {eventName && <EventName>{eventName}</EventName>}
+          {eventDate && <CountdownTimer targetDate={eventDate} />}
+        </Centralized>
+      </BoxPosition>
+
+      <Box_1>
+        <Action onClick={() => setIsModalOpen(true)}>
+          {eventStatus === "no-event"
+            ? "Create an Event!"
+            : eventStatus === "active"
+              ? "Edit Event"
+              : eventStatus === "expired"
+                ? "Create a new Event!"
+                : "Edit Event"}
+        </Action>
+        <LockedInputContainer>
+          <LockIcon />
+          <LockedInput disabled> Manage your Trip!</LockedInput>
+        </LockedInputContainer>
+      </Box_1>
+      <Logout onClick={logout}>Logout</Logout>
+      {/* 🔥 MODAL COM STEPS PARA CRIAR/EDITAR EVENTO */}
+      <ModalStep
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSave={saveEvent}
+        onEdit={handleEditEvent}
+        onDelete={handleDeleteEvent}
+        isEditMode={eventStatus === "active"}
+        initialName={eventName || ""}
+        initialDate={eventDate || ""}
+      />
+    </Container>
   );
 }

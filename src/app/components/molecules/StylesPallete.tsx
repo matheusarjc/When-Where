@@ -4,7 +4,7 @@ export const Container = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: space-around;
   height: 100vh;
 `;
 
@@ -13,6 +13,8 @@ export const Title = styled.h1`
   margin-bottom: 0.5rem;
   font-weight: bolder;
   color: ${({ theme }) => theme.colors.textTitle};
+  font-size: 2.2rem;
+  line-height: 2rem;
 `;
 
 export const FormBase = styled.form`
@@ -35,4 +37,34 @@ export const ContainerBody = styled.div`
   justify-content: center;
   height: 100vh;
   overflow: hidden; /* Evita qualquer overflow extra */
+`;
+
+export const BoxStyled = styled.div`
+  display: grid;
+  grid-template-columns: 50% 50%;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+`;
+
+export const Box = styled.div`
+  display: flex;
+`;
+
+export const BoxPosition = styled.div`
+  position: relative;
+
+  p {
+    text-align: center;
+  }
+`;
+
+export const Centralized = styled(Box)`
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+`;
+
+export const Box_1 = styled(Centralized)`
+  position: relative;
+  gap: 1rem;
 `;

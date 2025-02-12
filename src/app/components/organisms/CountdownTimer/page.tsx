@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { TimerContainer } from "./CountdownTimer";
+import { TimerContainer, TimeRemaining, Timing } from "./CountdownTimer";
 
 interface CountdownTimerProps {
   targetDate: string;
@@ -32,7 +32,13 @@ const CountdownTimer: React.FC<CountdownTimerProps> = ({ targetDate }) => {
 
   return (
     <TimerContainer>
-      <p>{`${timeLeft.days}d ${timeLeft.hours}h ${timeLeft.minutes}m ${timeLeft.seconds}s`}</p>
+      <p>
+        {" "}
+        <TimeRemaining>Time Remaining: </TimeRemaining>
+        <Timing>
+          {`${timeLeft.days}d ${timeLeft.hours}h ${timeLeft.minutes}m ${timeLeft.seconds}s`}{" "}
+        </Timing>
+      </p>
     </TimerContainer>
   );
 };
