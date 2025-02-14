@@ -20,6 +20,8 @@ export const Title = styled.h1`
 export const FormBase = styled.form`
   display: flex;
   flex-direction: column;
+  justify-content: center;
+  align-items: center;
 `;
 
 export const RowContainer = styled.div`
@@ -62,6 +64,9 @@ export const Centralized = styled(Box)`
   flex-direction: column;
   align-items: center;
   justify-content: center;
+
+  @media (min-width: 768px) {
+  }
 `;
 
 export const Box_1 = styled(Centralized)`

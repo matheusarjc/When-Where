@@ -99,8 +99,8 @@ export default function HomePage() {
   return (
     <Container>
       <BoxPosition>
-        <Title>Bem-vindo ao Cronômetro de Viagens</Title>
-        <p>Logado como: {user?.displayName}</p>
+        <Title>Welcome to When & Where</Title>
+        <p>Logged as: {user?.displayName}</p>
 
         <Centralized>
           {eventName && <EventName>{eventName}</EventName>}

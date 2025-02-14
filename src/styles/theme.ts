@@ -1,6 +1,6 @@
 export const theme = {
   colors: {
-    primary: "#0070f3", // Cor principal (Azul)
+    primary: "#317b4b", // Cor principal (Azul)
     secondary: "#1c1c1e", // Cor secundária (Cinza escuro)
     background: "#171717",
     text: "#333",
@@ -8,6 +8,7 @@ export const theme = {
     event: "#ECFFB0",
     white: "#ffffff",
     greenLight: "#4bdf7f",
+    modalEdit: "#f4f4f4",
   },
   fontSizes: {
     small: "12px",

@@ -8,6 +8,7 @@ import Button from "../../atoms/Button/page";
 import { ContainerBody, FormBase, RowContainer, Title } from "../../molecules/StylesPallete";
 import { FcGoogle } from "react-icons/fc";
 import { FaGithub } from "react-icons/fa";
+import { Continue } from "../../atoms/Button/Button";
 
 const Input = styled.input`
   width: 100%;
@@ -172,7 +173,7 @@ export default function AuthForm() {
             onChange={(e) => setPassword(e.target.value)}
             required
           />
-          <Button type="submit">{isLogin ? "Continue" : "Sign Up"}</Button>
+          <Continue type="submit">{isLogin ? "Continue" : "Sign Up"}</Continue>
         </FormBase>
 
         <Separator>Or</Separator>

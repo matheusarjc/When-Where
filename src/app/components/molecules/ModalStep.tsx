@@ -2,6 +2,8 @@ import { useState } from "react";
 import styled from "styled-components";
 import Button from "../atoms/Button/page";
 import { Delete } from "../atoms/Button/Button";
+import { Box } from "./StylesPallete";
+import { FaRegWindowClose } from "react-icons/fa";
 
 const Overlay = styled.div`
   position: fixed;
@@ -10,17 +12,42 @@ const Overlay = styled.div`
   width: 100%;
   height: 100%;
   background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(10px);
   display: flex;
   justify-content: center;
   align-items: center;
+  transition: 0.8s ease-in-out;
 `;
 
 const ModalContainer = styled.div`
-  background: ${({ theme }) => theme.colors.backgroundBox};
+  background: ${({ theme }) => theme.colors.modalEdit};
+  position: relative;
   padding: 2rem;
   border-radius: 10px;
   width: 400px;
   text-align: center;
+  transition: 0.8s ease-in-out;
+`;
+
+const ModalContent = styled.div`
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+`;
+
+const ModalBox = styled.div`
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+`;
+
+const ModalBoxButton = styled(ModalBox)`
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: row;
+  gap: 1rem;
 `;
 
 const Input = styled.input`
@@ -29,6 +56,12 @@ const Input = styled.input`
   margin: 10px 0;
   border: 1px solid #ccc;
   border-radius: 5px;
+`;
+const CloseButton = styled.div`
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  cursor: pointer;
 `;
 
 interface ModalStepProps {
@@ -69,21 +102,29 @@ export default function ModalStep({
   return (
     <Overlay>
       <ModalContainer>
-        <h2>{isEditMode ? "Edit Event" : "Create an Event"}</h2>
-        <Input
-          type="text"
-          placeholder="Event Name"
-          value={eventName}
-          onChange={(e) => setEventName(e.target.value)}
-        />
-        <Input
-          type="datetime-local"
-          value={eventDate}
-          onChange={(e) => setEventDate(e.target.value)}
-        />
-        <Button onClick={handleSave}>Save</Button>
-        {isEditMode && <Delete onClick={onDelete}>Delete Event</Delete>}
-        <Button onClick={onClose}>Cancel</Button>
+        <ModalContent>
+          <h2>{isEditMode ? "Edit Event" : "Create an Event"}</h2>
+          <ModalBox>
+            <Input
+              type="text"
+              placeholder="Event Name"
+              value={eventName}
+              onChange={(e) => setEventName(e.target.value)}
+            />
+            <Input
+              type="datetime-local"
+              value={eventDate}
+              onChange={(e) => setEventDate(e.target.value)}
+            />
+          </ModalBox>
+        </ModalContent>
+        <ModalBoxButton>
+          <Button onClick={handleSave}>Save</Button>
+          {isEditMode && <Delete onClick={onDelete}>Delete Event</Delete>}
+        </ModalBoxButton>
+        <CloseButton>
+          <FaRegWindowClose onClick={onClose} />
+        </CloseButton>
       </ModalContainer>
     </Overlay>
   );

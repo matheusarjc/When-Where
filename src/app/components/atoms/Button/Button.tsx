@@ -22,15 +22,22 @@ export const Logout = styled(StyledButton)`
   width: 100%;
 `;
 
-export const Edit = styled(StyledButton)`
-  width: 70%;
+export const Continue = styled(StyledButton)`
+  border-radius: 1rem;
+  background-color: #6bd891;
+
+  &:hover {
+    color: #fff;
+    transition: 0.3s ease-out;
+    box-shadow: 0px 10px 13px 0px rgba(0, 0, 0, 0.75);
+  }
 `;
 
 export const Delete = styled(StyledButton)`
   background-color: red;
 `;
 
-export const Action = styled(StyledButton)`
+export const Action = styled(Continue)`
   width: 180px;
 `;
 
@@ -65,6 +72,6 @@ export const LockIcon = styled(FaLock)`
   top: 50%;
   left: 45%;
   transform: translateY(-50%);
-  color: ${({ theme }) => theme.colors.text || "#fff"};
+  color: #fff;
   font-size: 16px;
 `;
