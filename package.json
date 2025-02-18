@@ -16,6 +16,7 @@
     "react-dom": "^19.0.0",
     "react-icons": "^5.4.0",
     "styled-components": "^6.1.14",
+    "ts-jest": "^29.2.5",
     "ww-app": "file:"
   },
   "devDependencies": {
@@ -32,6 +33,7 @@
     "jest-environment-jsdom": "^29.7.0",
     "prettier": "^3.4.2",
     "ts-node": "^10.9.2",
-    "typescript": "^5.7.3"
+    "typescript": "^5.7.3",
+    "whatwg-fetch": "^3.6.20"
   }
 }
