@@ -101,7 +101,7 @@ function AuthForm() {
         </SocialDiv>
 
         <ToggleText onClick={() => setIsLogin(!isLogin)}>
-          {isLogin ? "Ainda não tem uma conta? Cadastre-se" : "Já tem uma conta? Faça login"}
+          {isLogin ? "Don't have an account? Sign Up" : "Already have an account? Login"}
         </ToggleText>
       </BoxForm>
     </ContainerBody>

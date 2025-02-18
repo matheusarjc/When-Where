@@ -6,7 +6,7 @@ import StyledComponentsRegistry from "@/app/registry";
 import { act } from "react";
 import "whatwg-fetch"; // 🔹 Polyfill para evitar erro de fetch
 
-// 🔹 Mock de Next.js Navigation
+// Navigation Mock
 jest.mock("next/navigation", () => ({
   useRouter: () => ({
     push: jest.fn(),
@@ -15,7 +15,7 @@ jest.mock("next/navigation", () => ({
   useServerInsertedHTML: jest.fn(),
 }));
 
-// 🔹 Mock da função login dentro do AuthContext
+// AuthoContext mock
 const mockLogin = jest.fn(() => Promise.resolve()); // ✅ Agora retorna uma Promise resolvida
 const mockLogout = jest.fn();
 
@@ -28,7 +28,7 @@ jest.mock("@/context/AuthContext", () => ({
   AuthProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
 
-test("deve renderizar o título corretamente após o carregamento", async () => {
+test("need to render the title after loading page", async () => {
   await act(async () => {
     render(
       <StyledComponentsRegistry>
@@ -46,7 +46,7 @@ test("deve renderizar o título corretamente após o carregamento", async () => 
   });
 });
 
-test("deve renderizar os campos de email e senha", async () => {
+test("need to render the fiels: 'email' and 'password'", async () => {
   await act(async () => {
     render(
       <StyledComponentsRegistry>
@@ -63,7 +63,7 @@ test("deve renderizar os campos de email e senha", async () => {
   expect(screen.getByPlaceholderText(/Password/i)).toBeDefined();
 });
 
-test("deve permitir alternar entre login e cadastro", async () => {
+test("need to allow the switch the Login and Signup", async () => {
   await act(async () => {
     render(
       <StyledComponentsRegistry>
@@ -78,7 +78,7 @@ test("deve permitir alternar entre login e cadastro", async () => {
 
   expect(screen.getByText(/Log in or sign up/i)).toBeDefined();
 
-  const toggleButton = screen.getByText(/Ainda não tem uma conta\? Cadastre-se/i);
+  const toggleButton = screen.getByText(/Don't have an account? Sign Up/i);
   fireEvent.click(toggleButton);
 
   await waitFor(() => {
@@ -86,7 +86,7 @@ test("deve permitir alternar entre login e cadastro", async () => {
   });
 });
 
-test("deve permitir login ao preencher email e senha e clicar em continuar", async () => {
+test("need to allow to login by filling email and password and click on continue", async () => {
   await act(async () => {
     render(
       <StyledComponentsRegistry>
@@ -108,7 +108,7 @@ test("deve permitir login ao preencher email e senha e clicar em continuar", asy
     .getAllByText(/Continue/i)
     .find((btn) => btn.tagName.toLowerCase() === "button");
 
-  if (!loginButton) throw new Error("Botão de login não encontrado");
+  if (!loginButton) throw new Error("Login button not found");
 
   fireEvent.click(loginButton);
 
