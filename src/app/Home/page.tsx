@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, act } from "react";
 import Button from "../components/atoms/Button/page";
 import ModalStep from "../components/molecules/ModalStep";
 import CountdownTimer from "../components/organisms/CountdownTimer/page";
@@ -25,21 +25,26 @@ import {
   Logout,
 } from "../components/atoms/Button/Button";
 
-export default function HomePage() {
+function Home() {
   const [eventDate, setEventDate] = useState<string | null>(null);
   const [eventName, setEventName] = useState<string | null>(null);
   const [eventStatus, setEventStatus] = useState<"no-event" | "active" | "expired">("no-event");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { user, logout } = useAuth();
   const router = useRouter();
+  const isFetching = useRef(false); // 🔹 Controla múltiplas chamadas
 
   useEffect(() => {
+    let isMounted = true; // 🔹 Evita múltiplas chamadas
     if (!user) {
-      router.push("/"); // Redireciona para login se não estiver autenticado
-    } else {
+      router.push("/");
+    } else if (!eventDate && isMounted) {
       fetchEventDate();
     }
-  }, [user, router]);
+    return () => {
+      isMounted = false;
+    };
+  }, [user, eventDate, router]);
 
   // 🔥 Função para buscar o evento no Firebase
   const fetchEventDate = async () => {
@@ -49,20 +54,12 @@ export default function HomePage() {
 
     if (eventSnap.exists()) {
       const eventData = eventSnap.data();
-      setEventDate(eventData.date);
-      setEventName(eventData.name);
+      await act(async () => {
+        // ✅ Envolvendo no act()
+        setEventDate(eventData.date);
+        setEventName(eventData.name);
+      });
     }
-  };
-
-  // 🔥 Salvar Evento no Firestore (Nome e Data)
-  const saveEvent = async (name: string, date: string) => {
-    if (!user) return;
-
-    const eventRef = doc(db, "events", user.uid);
-    await setDoc(eventRef, { name, date });
-
-    setEventName(name);
-    setEventDate(date);
   };
 
   useEffect(() => {
@@ -128,7 +125,7 @@ export default function HomePage() {
       <ModalStep
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        onSave={saveEvent}
+        onSave={handleEditEvent}
         onEdit={handleEditEvent}
         onDelete={handleDeleteEvent}
         isEditMode={eventStatus === "active"}
@@ -138,3 +135,4 @@ export default function HomePage() {
     </Container>
   );
 }
+export default Home;

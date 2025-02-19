@@ -1,5 +1,6 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { AuthProvider, useAuth } from "@/context/AuthContext"; // 🔹 Importação correta do useAuth
+import { AuthProvider, useAuth } from "@/context/AuthContext";
+// 🔹 Importação correta do useAuth
 import { AuthForm } from "@/app/components/organisms/Auth/AuthForm";
 import ThemeProvider from "@/styles/ThemeProvider";
 import StyledComponentsRegistry from "@/app/registry";
@@ -78,7 +79,7 @@ test("need to allow the switch the Login and Signup", async () => {
 
   expect(screen.getByText(/Log in or sign up/i)).toBeDefined();
 
-  const toggleButton = screen.getByText(/Don't have an account? Sign Up/i);
+  const toggleButton = await screen.findByText(/Don't have an account\? Sign Up/i);
   fireEvent.click(toggleButton);
 
   await waitFor(() => {
