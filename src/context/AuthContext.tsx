@@ -18,6 +18,7 @@ import { auth, githubProvider, googleProvider } from "@/lib/firebaseConfig";
 interface AuthContextType {
   user: User | null;
   token: string | null;
+  loading: boolean;
   login: (email: string, password: string) => Promise<void>;
   signup: (email: string, password: string, username: string, name: string) => Promise<void>;
   loginWithGoogle: () => Promise<void>;
@@ -32,16 +33,14 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
   const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
+  let refreshInterval: NodeJS.Timeout | undefined;
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
-        // Obtém o token inicial do Firebase
         const idToken = await getIdToken(user);
         setToken(idToken);
         setUser(user);
-
-        // Inicia a atualização automática do token
         startTokenRefresh(user);
       } else {
         setUser(null);
@@ -50,36 +49,39 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
       setLoading(false);
     });
 
-    return () => unsubscribe();
+    return () => {
+      unsubscribe();
+      if (refreshInterval) clearInterval(refreshInterval);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // 🚀 Função para Renovar o Token Automaticamente
   const startTokenRefresh = (user: User) => {
-    setInterval(
+    // Limpa qualquer intervalo anterior
+    if (refreshInterval) clearInterval(refreshInterval);
+
+    refreshInterval = setInterval(
       async () => {
         try {
-          const newToken = await getIdToken(user, true); // `true` força a atualização
+          const newToken = await getIdToken(user, true);
           setToken(newToken);
           console.log("🔥 Token atualizado com sucesso!");
         } catch (error) {
           console.error("Erro ao atualizar token:", error);
-          logout(); // Se não puder atualizar, desloga o usuário
+          logout();
         }
       },
       30 * 60 * 1000
-    ); // Atualiza o token a cada 55 minutos
+    );
   };
 
   const login = async (email: string, password: string) => {
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
-
-      // Obtém o token ao logar
       const idToken = await getIdToken(user);
       setToken(idToken);
       setUser(user);
-
       router.push("/Home");
     } catch (error) {
       console.error("Erro ao fazer login:", error);
@@ -90,17 +92,10 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
-
-      await updateProfile(user, {
-        displayName: name, // Aqui salvamos o nome no perfil do Firebase
-      });
-
-      // Obtém o token ao cadastrar
+      await updateProfile(user, { displayName: name });
       const idToken = await getIdToken(user);
       setToken(idToken);
       setUser(user);
-
-      console.log("Usuário criado:", user);
       router.push("/Home");
     } catch (error) {
       console.error("Erro ao criar conta:", error);
@@ -134,13 +129,9 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
     router.push("/");
   };
 
-  if (loading) {
-    return <p>Carregando...</p>; // Exibe um loading enquanto verifica a autenticação
-  }
-
   return (
     <AuthContext.Provider
-      value={{ user, token, login, signup, loginWithGoogle, loginWithGithub, logout }}>
+      value={{ user, token, loading, login, signup, loginWithGoogle, loginWithGithub, logout }}>
       {children}
     </AuthContext.Provider>
   );

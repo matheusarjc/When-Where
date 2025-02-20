@@ -3,13 +3,14 @@
 import { useAuth } from "@/context/AuthContext";
 import { useState, useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
-
-import Button from "../../atoms/Button/page";
-import { ContainerBody, FormBase, RowContainer, Title } from "../../molecules/StylesPallete";
-import { FcGoogle } from "react-icons/fc";
 import { FaGithub } from "react-icons/fa";
+import { FcGoogle } from "react-icons/fc";
 import { Continue } from "../../atoms/Button/Button";
 import {
+  ContainerBody,
+  Title,
+  FormBase,
+  RowContainer,
   BoxForm,
   GithubButton,
   GoogleButton,
@@ -17,10 +18,12 @@ import {
   Separator,
   SocialDiv,
   ToggleText,
-} from "./style";
+  Subtitle,
+} from "../../molecules/StylesPallete";
 
 function AuthForm() {
-  const { user, login, signup, loginWithGoogle, loginWithGithub } = useAuth();
+  // Agora também obtemos o loading do contexto
+  const { user, loading, login, signup, loginWithGoogle, loginWithGithub } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
   const [isLogin, setIsLogin] = useState(true);
@@ -30,10 +33,11 @@ function AuthForm() {
   const [password, setPassword] = useState("");
 
   useEffect(() => {
-    if (user && pathname === "/") {
-      router.push("/Home");
+    // Só redireciona se a verificação de autenticação já terminou
+    if (!loading && user && pathname === "/") {
+      router.replace("/Home");
     }
-  }, [user, router, pathname]);
+  }, [loading, user, router, pathname]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,13 +48,15 @@ function AuthForm() {
     }
   };
 
+  if (loading) {
+    return <p>Carregando...</p>;
+  }
+
   return (
     <ContainerBody>
       <BoxForm>
         <Title>{isLogin ? "Get your trip plans with you!" : "Create an Account"}</Title>
-        <p style={{ color: "gray", fontSize: "14px", marginBottom: "20px" }}>
-          {isLogin ? "Log in or sign up" : "Sign up to get started"}
-        </p>
+        <Subtitle>{isLogin ? "Log in or sign up" : "Sign up to get started"}</Subtitle>
         <FormBase onSubmit={handleSubmit}>
           {!isLogin && (
             <RowContainer>
@@ -61,6 +67,7 @@ function AuthForm() {
                 onChange={(e) => setUsername(e.target.value)}
                 required
               />
+
               <Input
                 type="text"
                 placeholder="Name"

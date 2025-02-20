@@ -3,6 +3,7 @@ import React from "react";
 import StyledComponentsRegistry from "./registry";
 import ThemeProvider from "@/styles/ThemeProvider";
 import { AuthProvider } from "@/context/AuthContext";
+import { EventProvider } from "@/context/EventContext";
 
 export const metadata: Metadata = {
   title: "When and Where",
@@ -15,7 +16,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         <StyledComponentsRegistry>
           <ThemeProvider>
-            <AuthProvider>{children}</AuthProvider>
+            <AuthProvider>
+              <EventProvider>
+                {" "}
+                {/* ✅ Garante que todas as páginas tenham acesso ao contexto */}
+                {children}
+              </EventProvider>
+            </AuthProvider>
           </ThemeProvider>
         </StyledComponentsRegistry>
       </body>

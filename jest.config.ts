@@ -14,8 +14,8 @@ const config: Config = {
     "^@/(.*)$": "<rootDir>/src/$1",
   },
 
-  // Setup global para Jest
-  setupFilesAfterEnv: ["<rootDir>/jest.setup.ts"],
+  // Setup global para Jest, incluindo `jest-styled-components`
+  setupFilesAfterEnv: ["<rootDir>/jest.setup.ts", "jest-styled-components"],
 
   // Ignorar a transformação de módulos do node_modules que podem causar erros
   transformIgnorePatterns: ["/node_modules/(?!@testing-library|@firebase|firebase/.*)"],

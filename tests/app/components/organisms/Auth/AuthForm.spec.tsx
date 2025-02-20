@@ -1,3 +1,7 @@
+/**
+ * @jest-environment jsdom
+ */
+
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { AuthProvider, useAuth } from "@/context/AuthContext";
 // 🔹 Importação correta do useAuth
@@ -6,6 +10,7 @@ import ThemeProvider from "@/styles/ThemeProvider";
 import StyledComponentsRegistry from "@/app/registry";
 import { act } from "react";
 import "whatwg-fetch"; // 🔹 Polyfill para evitar erro de fetch
+import "jest-styled-components"; //
 
 // Navigation Mock
 jest.mock("next/navigation", () => ({

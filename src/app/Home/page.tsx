@@ -11,14 +11,14 @@ import {
   Container,
   Title,
 } from "../components/molecules/StylesPallete";
+import { useEvent } from "@/context/EventContext";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
-import { deleteDoc, doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
+import { deleteDoc, doc, getDoc, updateDoc } from "firebase/firestore";
 import { db } from "@/lib/firebaseConfig";
 import { EventName } from "./StylePage";
 import {
   Action,
-  Blocked,
   LockedInput,
   LockedInputContainer,
   LockIcon,
@@ -26,21 +26,25 @@ import {
 } from "../components/atoms/Button/Button";
 
 function Home() {
-  const [eventDate, setEventDate] = useState<string | null>(null);
-  const [eventName, setEventName] = useState<string | null>(null);
-  const [eventStatus, setEventStatus] = useState<"no-event" | "active" | "expired">("no-event");
+  const { eventDate, setEventDate, eventName, setEventName, eventStatus, setEventStatus } =
+    useEvent();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { user, logout } = useAuth();
   const router = useRouter();
-  const isFetching = useRef(false); // 🔹 Controla múltiplas chamadas
+  const isFetching = useRef(false);
 
   useEffect(() => {
-    let isMounted = true; // 🔹 Evita múltiplas chamadas
+    let isMounted = true;
+
     if (!user) {
       router.push("/");
-    } else if (!eventDate && isMounted) {
-      fetchEventDate();
+    } else if (!eventDate && isMounted && !isFetching.current) {
+      isFetching.current = true;
+      fetchEventDate().finally(() => {
+        isFetching.current = false;
+      });
     }
+
     return () => {
       isMounted = false;
     };

@@ -16,6 +16,10 @@ const GlobalStyle = createGlobalStyle`
     color: ${({ theme }) => theme.colors.text};
     font-family: 'Poppins', serif;
     overflow: hidden;
+
+    @media (min-width: 768px){
+      padding: ${({ theme }) => theme.screen.md};
+    }
   }
 
   button {
