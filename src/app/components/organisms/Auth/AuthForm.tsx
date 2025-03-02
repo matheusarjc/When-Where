@@ -5,7 +5,7 @@ import { useState, useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { FaGithub } from "react-icons/fa";
 import { FcGoogle } from "react-icons/fc";
-import { Continue } from "../../atoms/Button/Button";
+import { Continue } from "../../atoms/Button/Styles";
 import {
   ContainerBody,
   Title,

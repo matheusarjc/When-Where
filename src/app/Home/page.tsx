@@ -22,7 +22,7 @@ import {
   LockedInputContainer,
   LockIcon,
   Logout,
-} from "../components/atoms/Button/Button";
+} from "../components/atoms/Button/Styles";
 
 function Home() {
   const { eventDate, setEventDate, eventName, setEventName, eventStatus, setEventStatus } =

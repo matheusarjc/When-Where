@@ -1,7 +1,7 @@
 import { useState } from "react";
 import styled from "styled-components";
-import Button from "../atoms/Button/page";
-import { Delete } from "../atoms/Button/Button";
+import Button from "../atoms/Button/Button";
+import { Delete } from "../atoms/Button/Styles";
 import { Box } from "./StylesPallete";
 import { FaRegWindowClose } from "react-icons/fa";
 
