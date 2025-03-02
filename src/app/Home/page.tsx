@@ -1,7 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, act } from "react";
-import Button from "../components/atoms/Button/page";
+import { useState, useEffect, useRef } from "react";
 import ModalStep from "../components/molecules/ModalStep";
 import CountdownTimer from "../components/organisms/CountdownTimer/page";
 import {
@@ -14,7 +13,7 @@ import {
 import { useEvent } from "@/context/EventContext";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
-import { deleteDoc, doc, getDoc, updateDoc } from "firebase/firestore";
+import { deleteDoc, doc, getDoc, setDoc } from "firebase/firestore";
 import { db } from "@/lib/firebaseConfig";
 import { EventName } from "./StylePage";
 import {
@@ -32,25 +31,27 @@ function Home() {
   const { user, logout } = useAuth();
   const router = useRouter();
   const isFetching = useRef(false);
+  const [hasFetchedEvent, setHasFetchedEvent] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
 
     if (!user) {
       router.push("/");
-    } else if (!eventDate && isMounted && !isFetching.current) {
+    } else if (!eventDate && !hasFetchedEvent && isMounted && !isFetching.current) {
       isFetching.current = true;
       fetchEventDate().finally(() => {
         isFetching.current = false;
+        setHasFetchedEvent(true);
       });
     }
 
     return () => {
       isMounted = false;
     };
-  }, [user, eventDate, router]);
+  }, [user, eventDate, hasFetchedEvent, router]);
 
-  // 🔥 Função para buscar o evento no Firebase
+  // Função para buscar o evento no Firebase
   const fetchEventDate = async () => {
     if (!user) return;
     const eventRef = doc(db, "events", user.uid);
@@ -58,11 +59,8 @@ function Home() {
 
     if (eventSnap.exists()) {
       const eventData = eventSnap.data();
-      await act(async () => {
-        // ✅ Envolvendo no act()
-        setEventDate(eventData.date);
-        setEventName(eventData.name);
-      });
+      setEventDate(eventData.date);
+      setEventName(eventData.name);
     }
   };
 
@@ -70,20 +68,24 @@ function Home() {
     if (eventDate) {
       const eventTime = new Date(eventDate).getTime();
       const currentTime = new Date().getTime();
-
       setEventStatus(currentTime >= eventTime ? "expired" : "active");
     } else {
       setEventStatus("no-event");
     }
-  }, [eventDate]);
+  }, [eventDate, setEventStatus]);
 
+  // Cria ou atualiza o documento com merge para evitar sobregravação total
   const handleEditEvent = async (newName: string, newDate: string) => {
     if (!user) return;
     const eventRef = doc(db, "events", user.uid);
-    await updateDoc(eventRef, { name: newName, date: newDate });
-
-    setEventName(newName);
-    setEventDate(newDate);
+    try {
+      await setDoc(eventRef, { name: newName, date: newDate }, { merge: true });
+      setEventName(newName);
+      setEventDate(newDate);
+      setHasFetchedEvent(true);
+    } catch (error) {
+      console.error("Erro ao salvar evento:", error);
+    }
   };
 
   const handleDeleteEvent = async () => {
@@ -94,6 +96,7 @@ function Home() {
       setEventName(null);
       setEventDate(null);
       setEventStatus("no-event");
+      setHasFetchedEvent(true);
     }
   };
 
@@ -121,11 +124,11 @@ function Home() {
         </Action>
         <LockedInputContainer>
           <LockIcon />
-          <LockedInput disabled> Manage your Trip!</LockedInput>
+          <LockedInput disabled>Manage your Trip!</LockedInput>
         </LockedInputContainer>
       </Box_1>
       <Logout onClick={logout}>Logout</Logout>
-      {/* 🔥 MODAL COM STEPS PARA CRIAR/EDITAR EVENTO */}
+      {/* MODAL COM STEPS PARA CRIAR/EDITAR EVENTO */}
       <ModalStep
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
@@ -139,4 +142,5 @@ function Home() {
     </Container>
   );
 }
+
 export default Home;

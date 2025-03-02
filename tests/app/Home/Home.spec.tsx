@@ -12,6 +12,7 @@ import * as React from "react";
 // 🔹 Mocks Globais
 const mockLogout = jest.fn();
 const mockPush = jest.fn();
+const mockedUseAuth = useAuth as jest.Mock;
 const mockEventData = {
   exists: () => true,
   data: () => ({
@@ -20,12 +21,13 @@ const mockEventData = {
   }),
 };
 
-// 🔹 Mock do `useRouter`
+// 🔹 Mock do `useRouter` e demais funções do next/navigation
 jest.mock("next/navigation", () => ({
   useRouter: () => ({
     push: mockPush,
   }),
   usePathname: jest.fn(() => "/Home"),
+  useServerInsertedHTML: jest.fn(() => {}), // mock para evitar execução real
 }));
 
 // 🔹 Mock do `useAuth`
@@ -55,40 +57,8 @@ jest.mock("@firebase/firestore", () => {
   };
 });
 
-// 🔹 Mock do `useEvent` com implementação real usando context e useState
-jest.mock("@/context/EventContext", () => {
-  const EventContext = React.createContext<{
-    eventDate: string | null;
-    setEventDate: React.Dispatch<React.SetStateAction<string | null>>;
-    eventName: string | null;
-    setEventName: React.Dispatch<React.SetStateAction<string | null>>;
-    eventStatus: string;
-    setEventStatus: React.Dispatch<React.SetStateAction<string>>;
-  }>({
-    eventDate: null,
-    setEventDate: () => {},
-    eventName: null,
-    setEventName: () => {},
-    eventStatus: "no-event",
-    setEventStatus: () => {},
-  });
-
-  return {
-    useEvent: () => React.useContext(EventContext),
-    EventProvider: ({ children }: { children: React.ReactNode }) => {
-      const [eventDate, setEventDate] = React.useState<string | null>(null);
-      const [eventName, setEventName] = React.useState<string | null>(null);
-      const [eventStatus, setEventStatus] = React.useState("no-event");
-
-      return (
-        <EventContext.Provider
-          value={{ eventDate, setEventDate, eventName, setEventName, eventStatus, setEventStatus }}>
-          {children}
-        </EventContext.Provider>
-      );
-    },
-  };
-});
+// NÃO mocke o EventContext – use a implementação real disponível no código
+// Assim, o EventProvider real (definido em seu projeto) é utilizado
 
 // 🔥 Importa o componente Home depois dos mocks!
 import Home from "@/app/Home/page";
@@ -174,8 +144,8 @@ describe("Home - Exibição de Evento", () => {
 describe("Home - Redirecionamento", () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    // Simula usuário não autenticado
-    (useAuth as jest.Mock).mockReturnValue({
+    // Simula usuário não autenticado via mockedUseAuth
+    mockedUseAuth.mockReturnValue({
       user: null,
       logout: jest.fn(),
     });

@@ -19,7 +19,7 @@ import {
   SocialDiv,
   ToggleText,
   Subtitle,
-} from "../../molecules/StylesPallete";
+} from "@/app/components/molecules/StylesPallete";
 
 function AuthForm() {
   // Agora também obtemos o loading do contexto

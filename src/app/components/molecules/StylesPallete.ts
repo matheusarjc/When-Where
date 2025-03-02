@@ -1,3 +1,4 @@
+"use client";
 import styled from "styled-components";
 
 export const Container = styled.div`
@@ -91,7 +92,7 @@ export const Input = styled.input`
   border-radius: 0.5rem;
   font-size: 14px;
   background-color: ${({ theme }) => theme.colors.inputBackground};
-  color: ${({ theme }) => theme.colors.text};
+  color: ${({ theme }) => theme.colors.white};
 
   &::placeholder {
     font-size: 14px;

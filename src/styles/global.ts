@@ -13,7 +13,6 @@ const GlobalStyle = createGlobalStyle`
   body{
     background-color: ${({ theme }) => theme.colors.background};
     padding: ${({ theme }) => theme.screen.xs};
-    color: ${({ theme }) => theme.colors.text};
     font-family: 'Poppins', serif;
     overflow: hidden;
 
