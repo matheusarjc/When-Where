@@ -1,56 +1,46 @@
-import styled from "styled-components";
+"use client";
 
-export const TimerContainer = styled.div`
-  font-weight: bold;
-  text-align: center;
+import { useState, useEffect } from "react";
+import { TimerContainer, TimeRemaining, Timing } from "./Styles";
 
-  p {
-    color: ${({ theme }) => theme.colors.textTitle};
+interface CountdownTimerProps {
+  targetDate: string;
+}
 
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-  }
-`;
+const CountdownTimer: React.FC<CountdownTimerProps> = ({ targetDate }) => {
+  const calculateTimeLeft = () => {
+    const difference = new Date(targetDate).getTime() - new Date().getTime();
+    if (difference <= 0) return { days: 0, hours: 0, minutes: 0, seconds: 0 };
 
-export const TimeRemaining = styled.span`
-  font-weight: 300;
-  opacity: 40%;
-`;
+    return {
+      days: Math.floor(difference / (1000 * 60 * 60 * 24)),
+      hours: Math.floor((difference / (1000 * 60 * 60)) % 24),
+      minutes: Math.floor((difference / 1000 / 60) % 60),
+      seconds: Math.floor((difference / 1000) % 60),
+    };
+  };
 
-export const Timing = styled.span`
-  padding: 1rem 1.5rem;
-  background-color: #317b4b;
-  border-radius: 3rem;
-  display: inline-block;
-  font-size: 2rem;
+  const [timeLeft, setTimeLeft] = useState(calculateTimeLeft());
 
-  /* Efeito Neon */
-  box-shadow:
-    0 0 10px ${({ theme }) => theme.colors.primary},
-    0 0 20px ${({ theme }) => theme.colors.primary},
-    0 0 30px ${({ theme }) => theme.colors.primary},
-    0 0 40px ${({ theme }) => theme.colors.primary};
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setTimeLeft(calculateTimeLeft());
+    }, 1000);
 
-  /* Animação para pulsar */
-  animation: neonGlow 1.5s infinite alternate;
+    return () => clearInterval(timer);
+  }, [targetDate]);
 
-  @keyframes neonGlow {
-    from {
-      box-shadow:
-        0 0 5px ${({ theme }) => theme.colors.primary},
-        0 0 10px ${({ theme }) => theme.colors.primary},
-        0 0 15px ${({ theme }) => theme.colors.primary};
-    }
-    to {
-      box-shadow:
-        0 0 10px ${({ theme }) => theme.colors.primary},
-        0 0 20px ${({ theme }) => theme.colors.primary},
-        0 0 30px ${({ theme }) => theme.colors.primary};
-    }
-  }
+  return (
+    <TimerContainer>
+      <p>
+        {" "}
+        <TimeRemaining>Time Remaining: </TimeRemaining>
+        <Timing>
+          {`${timeLeft.days}d ${timeLeft.hours}h ${timeLeft.minutes}m ${timeLeft.seconds}s`}{" "}
+        </Timing>
+      </p>
+    </TimerContainer>
+  );
+};
 
-  @media (min-width: 768px) {
-    font-size: 2.5rem;
-  }
-`;
+export default CountdownTimer;

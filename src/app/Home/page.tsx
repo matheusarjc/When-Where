@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import ModalStep from "../components/molecules/ModalStep";
-import CountdownTimer from "../components/organisms/CountdownTimer/page";
+import CountdownTimer from "../components/organisms/CountdownTimer/CountdownTimer";
 import {
   Box_1,
   BoxPosition,
