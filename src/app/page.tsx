@@ -53,8 +53,6 @@ import { Language, t } from "../lib/i18n";
 import { UserProfile } from "../lib/types";
 import { getCurrentUser, logout, followUser, unfollowUser } from "../lib/auth";
 import { createTrip, listenUserTrips, TripDoc } from "../lib/trips";
-import { db } from "../lib/firebase";
-import { addDoc, collection, doc as fsDoc, getDoc, serverTimestamp } from "firebase/firestore";
 
 interface UserSettings {
   name: string;
@@ -657,31 +655,7 @@ END:VCALENDAR`;
     },
   };
 
-  async function testFirestore() {
-    try {
-      if (!currentUser) {
-        setToast({ message: "Faça login para testar.", type: "error" });
-        return;
-      }
-      const ref = await addDoc(collection(db, "diagnostics"), {
-        userId: currentUser.id,
-        createdAt: serverTimestamp(),
-        note: "smoke-test",
-      });
-      const snap = await getDoc(fsDoc(db, "diagnostics", ref.id));
-      if (snap.exists()) {
-        setToast({ message: `✅ Firestore OK (id: ${ref.id})`, type: "success" });
-        // eslint-disable-next-line no-console
-        console.log("Firestore test doc:", { id: ref.id, data: snap.data() });
-      } else {
-        setToast({ message: "⚠️ Documento não encontrado após escrita", type: "error" });
-      }
-    } catch (e) {
-      // eslint-disable-next-line no-console
-      console.error(e);
-      setToast({ message: "❌ Falha ao escrever no Firestore", type: "error" });
-    }
-  }
+  //
 
   // Mostrar autenticação se não logado
   if (!currentUser) {
@@ -932,11 +906,6 @@ END:VCALENDAR`;
                 </div>
 
                 <div className="flex items-center gap-2">
-                  {process.env.NODE_ENV !== "production" && (
-                    <Button onClick={testFirestore} className="bg-white/10 hover:bg-white/15">
-                      Testar Firestore
-                    </Button>
-                  )}
                   <motion.button
                     whileHover={{ scale: prefersReducedMotion ? 1 : 1.05 }}
                     whileTap={{ scale: 0.95 }}
