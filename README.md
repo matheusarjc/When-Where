@@ -21,30 +21,35 @@ npm run build
 ## ✨ Core Features
 
 ### 📋 Trip Management
+
 - **Create and organize trips** with dates, locations, and custom cover images
 - **Timeline of events** with complete details (flights, hotels, activities, restaurants)
 - **Real-time countdown** for upcoming trips
 - **Automatic status**: Upcoming, In Progress, Completed
 
 ### 💾 Memories System
+
 - **3 memory types**: Notes, Photos, and Tips
 - **Advanced search** across all memories
 - **Intelligent filters** by type (notes, photos, tips, capsules)
 - **Photo upload** with captions and Firebase Storage integration
 
 ### 🕰️ Time Capsules
+
 - Transform memories into **time capsules**
 - Set future opening dates
 - Content locked until chosen date
 - Visual badge indicating status (open/locked)
 
 ### 📸 Photo Gallery
+
 - **Masonry Grid** responsive photo display
 - **Lightbox** with keyboard navigation (← →)
 - Enlarged view with details
 - Photo counter and Firebase Storage integration
 
 ### 🌐 Internationalization (i18n)
+
 - **3 supported languages**:
   - 🇧🇷 Portuguese (Brazil)
   - 🇺🇸 English (United States)
@@ -53,6 +58,7 @@ npm run build
 - Localized date formatting
 
 ### 🎨 Customization
+
 - **4 color themes**:
   - Teal (Default)
   - Purple
@@ -62,6 +68,7 @@ npm run build
 - **Settings** accessible at any time
 
 ### 🔗 Sharing
+
 - **Public links** for trips
 - **Export .ics** to add to calendar
 - Cinematic preview page
@@ -70,28 +77,33 @@ npm run build
 ## 🛠️ Technology Stack
 
 ### Frontend Core
+
 - **React 18** with **TypeScript** - Type safety and modern React features
 - **Next.js 14** - Full-stack React framework with App Router
 - **Tailwind CSS v4.0** - Utility-first CSS framework for rapid UI development
 - **shadcn/ui** - High-quality, accessible component library
 
 ### State Management & Data
+
 - **React Context API** - Global state management for auth and user preferences
 - **Firebase Authentication** - Google OAuth and email/password authentication
 - **Firebase Firestore** - NoSQL database for real-time data synchronization
 - **Firebase Storage** - File storage for trip covers and memory photos
 
 ### UI/UX & Animation
+
 - **Motion (Framer Motion)** - Smooth animations and micro-interactions
 - **Lucide Icons** - Consistent icon system
 - **React Responsive Masonry** - Responsive photo grid layout
 
 ### Testing & Quality
+
 - **Vitest** - Fast unit testing framework
 - **React Testing Library** - Component testing utilities
 - **Jest DOM** - Custom DOM matchers for testing
 
 ### Development Tools
+
 - **ESLint** - Code linting and formatting
 - **Prettier** - Code formatting
 - **TypeScript** - Static type checking
@@ -99,6 +111,7 @@ npm run build
 ## 🏗️ Architecture Decisions
 
 ### Why Firebase?
+
 **Firebase was chosen over other NoSQL solutions** for several strategic reasons:
 
 1. **Rapid Development**: Firebase provides a complete backend-as-a-service solution, allowing us to focus on frontend development without backend infrastructure concerns.
@@ -113,24 +126,28 @@ npm run build
 
 6. **TypeScript Support**: Excellent TypeScript integration with strongly typed Firestore queries and data models.
 
-**Alternatives Considered**: 
+**Alternatives Considered**:
+
 - **Supabase**: Great option but requires more backend setup
 - **MongoDB Atlas**: More complex for simple CRUD operations
 - **PlanetScale**: Overkill for this use case
 
 ### Why Next.js over Create React App?
+
 - **App Router**: Modern routing with layouts and nested routes
 - **Server Components**: Better performance and SEO
 - **Built-in optimizations**: Image optimization, font loading, etc.
 - **Full-stack capabilities**: API routes for future backend features
 
 ### Why Tailwind CSS?
+
 - **Rapid prototyping**: Utility classes speed up development
 - **Consistency**: Design system enforced through utilities
 - **Performance**: Purged CSS results in smaller bundle sizes
 - **Maintainability**: No CSS-in-JS complexity
 
 ### Why Vitest over Jest?
+
 - **Speed**: Faster test execution with Vite's native ESM support
 - **Modern**: Better TypeScript support out of the box
 - **Compatibility**: Jest-compatible API for easy migration
@@ -181,6 +198,7 @@ npm run test -- --coverage
 ```
 
 **Test Coverage**:
+
 - ✅ Authentication utilities
 - ✅ User management functions
 - ✅ Trip data operations
@@ -190,6 +208,7 @@ npm run test -- --coverage
 ## 🚀 Deployment
 
 ### Vercel (Recommended)
+
 ```bash
 # Deploy to Vercel
 npx vercel
@@ -198,7 +217,9 @@ npx vercel
 ```
 
 ### Other Platforms
+
 The app can be deployed to any platform that supports Next.js:
+
 - Netlify
 - AWS Amplify
 - Railway
