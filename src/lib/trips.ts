@@ -1,4 +1,4 @@
-import { addDoc, collection, doc, onSnapshot, orderBy, query, serverTimestamp, setDoc, Timestamp, where } from "firebase/firestore";
+import { addDoc, collection, onSnapshot, orderBy, query, serverTimestamp, Timestamp, where } from "firebase/firestore";
 import { db } from "./firebase";
 
 export interface TripDoc {
@@ -29,12 +29,33 @@ export async function createTrip(trip: TripDoc): Promise<string> {
 }
 
 export function listenUserTrips(userId: string, cb: (trips: TripDoc[]) => void) {
-  const col = collection(db, "trips");
-  const q = query(col, where("userId", "==", userId), orderBy("createdAt", "desc"));
-  return onSnapshot(q, (snap) => {
-    const res: TripDoc[] = snap.docs.map((d) => ({ id: d.id, ...(d.data() as any) }));
+  const colRef = collection(db, "trips");
+
+  const mapAndSend = (snap: any) => {
+    const res: TripDoc[] = snap.docs.map((d: any) => ({ id: d.id, ...(d.data() as any) }));
+    // Se o servidor não ordenou, ordena por createdAt no cliente (desc)
+    res.sort((a, b) => (b.createdAt?.toMillis?.() || 0) - (a.createdAt?.toMillis?.() || 0));
     cb(res);
-  });
+  };
+
+  // Tenta usar orderBy (requer índice). Se falhar, refaz sem orderBy.
+  let unsub = onSnapshot(
+    query(colRef, where("userId", "==", userId), orderBy("createdAt", "desc")),
+    mapAndSend,
+    (err) => {
+      // Falha por índice ausente → fallback sem orderBy
+      if ((err as any)?.code === "failed-precondition") {
+        // eslint-disable-next-line no-console
+        console.warn("Firestore index ausente para trips; usando fallback sem orderBy.");
+        unsub();
+        unsub = onSnapshot(query(colRef, where("userId", "==", userId)), mapAndSend);
+      } else {
+        // eslint-disable-next-line no-console
+        console.error(err);
+      }
+    }
+  );
+  return () => unsub();
 }
 
 
