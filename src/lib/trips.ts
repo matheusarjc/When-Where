@@ -1,4 +1,13 @@
-import { addDoc, collection, onSnapshot, orderBy, query, serverTimestamp, Timestamp, where } from "firebase/firestore";
+import {
+  addDoc,
+  collection,
+  onSnapshot,
+  orderBy,
+  query,
+  serverTimestamp,
+  Timestamp,
+  where,
+} from "firebase/firestore";
 import { db } from "./firebase";
 
 export interface TripDoc {
@@ -57,5 +66,3 @@ export function listenUserTrips(userId: string, cb: (trips: TripDoc[]) => void) 
   );
   return () => unsub();
 }
-
-

@@ -120,7 +120,7 @@ export function NewTripForm({ onClose, onSave }: NewTripFormProps) {
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
       <div className="w-full max-w-2xl rounded-3xl border border-white/10 bg-[#0a0a0a] p-6 max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between mb-6">
-          <h2>Nova Viagem</h2>
+          <h2 className="text-white">Nova Viagem</h2>
           <button
             onClick={onClose}
             className="rounded-full p-2 hover:bg-white/10 transition-colors"
@@ -182,25 +182,7 @@ export function NewTripForm({ onClose, onSave }: NewTripFormProps) {
 
           <div className="space-y-2">
             <Label>Escolha uma imagem de capa</Label>
-            {/* <div className="grid grid-cols-2 gap-3">
-              {DEFAULT_COVERS.map((cover, index) => (
-                <button
-                  key={index}
-                  type="button"
-                  onClick={() => setSelectedCover(cover)}
-                  className={`relative h-32 rounded-xl overflow-hidden border-2 transition-all ${
-                    selectedCover === cover
-                      ? "border-teal-400 ring-2 ring-teal-400/50"
-                      : "border-white/10 hover:border-white/30"
-                  }`}>
-                  <img
-                    src={cover}
-                    alt={`Cover ${index + 1}`}
-                    className="w-full h-full object-cover"
-                  />
-                </button>
-              ))}
-            </div> */}
+
             <div className="pt-3">
               <div
                 onDragOver={(e) => {
@@ -278,7 +260,7 @@ export function NewTripForm({ onClose, onSave }: NewTripFormProps) {
                 />
               </div>
               {error && <p className="text-red-400 text-sm mt-2">{error}</p>}
-              {!previewUrl && (
+              {/* {!previewUrl && (
                 <div className="mt-4 flex items-center gap-3">
                   <img
                     src={DEFAULT_COVER}
@@ -287,7 +269,7 @@ export function NewTripForm({ onClose, onSave }: NewTripFormProps) {
                   />
                   <p className="text-white/50 text-sm">Sem upload, usaremos esta imagem padrão.</p>
                 </div>
-              )}
+              )} */}
             </div>
           </div>
 

@@ -1,49 +1,49 @@
-'use client'
-import { useState } from 'react'
-import { X, Upload } from 'lucide-react'
-import { Button } from './ui/button'
-import { Label } from './ui/label'
-import { ImageWithFallback } from './figma/ImageWithFallback'
+"use client";
+import { useState } from "react";
+import { X, Upload } from "lucide-react";
+import { Button } from "./ui/button";
+import { Label } from "./ui/label";
+import { ImageWithFallback } from "./media/ImageWithFallback";
 
 interface NewMemoryFormProps {
-  onClose: () => void
+  onClose: () => void;
   onSave: (memory: {
-    type: 'note' | 'photo' | 'tip'
-    content: string
-    mediaUrl?: string
-    openAt?: string
-  }) => void
-  tripId?: string
+    type: "note" | "photo" | "tip";
+    content: string;
+    mediaUrl?: string;
+    openAt?: string;
+  }) => void;
+  tripId?: string;
 }
 
 export function NewMemoryForm({ onClose, onSave, tripId }: NewMemoryFormProps) {
-  const [type, setType] = useState<'note' | 'photo' | 'tip'>('note')
-  const [content, setContent] = useState('')
-  const [isCapsule, setIsCapsule] = useState(false)
-  const [openAt, setOpenAt] = useState('')
-  const [previewUrl, setPreviewUrl] = useState<string>('')
+  const [type, setType] = useState<"note" | "photo" | "tip">("note");
+  const [content, setContent] = useState("");
+  const [isCapsule, setIsCapsule] = useState(false);
+  const [openAt, setOpenAt] = useState("");
+  const [previewUrl, setPreviewUrl] = useState<string>("");
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
+    const file = e.target.files?.[0];
     if (file) {
-      const reader = new FileReader()
+      const reader = new FileReader();
       reader.onloadend = () => {
-        setPreviewUrl(reader.result as string)
-        setType('photo')
-      }
-      reader.readAsDataURL(file)
+        setPreviewUrl(reader.result as string);
+        setType("photo");
+      };
+      reader.readAsDataURL(file);
     }
-  }
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
     onSave({
       type,
       content,
       mediaUrl: previewUrl || undefined,
-      openAt: isCapsule ? openAt : undefined
-    })
-  }
+      openAt: isCapsule ? openAt : undefined,
+    });
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
@@ -53,8 +53,7 @@ export function NewMemoryForm({ onClose, onSave, tripId }: NewMemoryFormProps) {
           <button
             onClick={onClose}
             className="rounded-full p-2 hover:bg-white/10 transition-colors"
-            aria-label="Fechar"
-          >
+            aria-label="Fechar">
             <X className="h-5 w-5" />
           </button>
         </div>
@@ -65,41 +64,38 @@ export function NewMemoryForm({ onClose, onSave, tripId }: NewMemoryFormProps) {
             <div className="grid grid-cols-3 gap-3">
               <button
                 type="button"
-                onClick={() => setType('note')}
+                onClick={() => setType("note")}
                 className={`rounded-xl p-3 border transition-all ${
-                  type === 'note'
-                    ? 'border-teal-400 bg-teal-400/10 text-teal-400'
-                    : 'border-white/10 bg-white/5 hover:border-white/30'
-                }`}
-              >
+                  type === "note"
+                    ? "border-teal-400 bg-teal-400/10 text-teal-400"
+                    : "border-white/10 bg-white/5 hover:border-white/30"
+                }`}>
                 Nota
               </button>
               <button
                 type="button"
-                onClick={() => setType('tip')}
+                onClick={() => setType("tip")}
                 className={`rounded-xl p-3 border transition-all ${
-                  type === 'tip'
-                    ? 'border-teal-400 bg-teal-400/10 text-teal-400'
-                    : 'border-white/10 bg-white/5 hover:border-white/30'
-                }`}
-              >
+                  type === "tip"
+                    ? "border-teal-400 bg-teal-400/10 text-teal-400"
+                    : "border-white/10 bg-white/5 hover:border-white/30"
+                }`}>
                 Dica
               </button>
               <button
                 type="button"
-                onClick={() => setType('photo')}
+                onClick={() => setType("photo")}
                 className={`rounded-xl p-3 border transition-all ${
-                  type === 'photo'
-                    ? 'border-teal-400 bg-teal-400/10 text-teal-400'
-                    : 'border-white/10 bg-white/5 hover:border-white/30'
-                }`}
-              >
+                  type === "photo"
+                    ? "border-teal-400 bg-teal-400/10 text-teal-400"
+                    : "border-white/10 bg-white/5 hover:border-white/30"
+                }`}>
                 Foto
               </button>
             </div>
           </div>
 
-          {type === 'photo' && (
+          {type === "photo" && (
             <div className="space-y-2">
               <Label htmlFor="image">Imagem</Label>
               <div className="relative">
@@ -112,8 +108,7 @@ export function NewMemoryForm({ onClose, onSave, tripId }: NewMemoryFormProps) {
                 />
                 <label
                   htmlFor="image"
-                  className="flex flex-col items-center justify-center w-full h-40 rounded-xl border-2 border-dashed border-white/20 bg-white/5 hover:bg-white/10 cursor-pointer transition-colors"
-                >
+                  className="flex flex-col items-center justify-center w-full h-40 rounded-xl border-2 border-dashed border-white/20 bg-white/5 hover:bg-white/10 cursor-pointer transition-colors">
                   {previewUrl ? (
                     <ImageWithFallback
                       src={previewUrl}
@@ -133,18 +128,18 @@ export function NewMemoryForm({ onClose, onSave, tripId }: NewMemoryFormProps) {
 
           <div className="space-y-2">
             <Label htmlFor="content">
-              {type === 'tip' ? 'Sua dica' : type === 'photo' ? 'Legenda' : 'Sua nota'}
+              {type === "tip" ? "Sua dica" : type === "photo" ? "Legenda" : "Sua nota"}
             </Label>
             <textarea
               id="content"
               value={content}
               onChange={(e) => setContent(e.target.value)}
               placeholder={
-                type === 'tip'
-                  ? 'Ex: Reserve com antecedência para evitar filas...'
-                  : type === 'photo'
-                  ? 'Descreva este momento...'
-                  : 'Escreva suas memórias, pensamentos ou reflexões...'
+                type === "tip"
+                  ? "Ex: Reserve com antecedência para evitar filas..."
+                  : type === "photo"
+                  ? "Descreva este momento..."
+                  : "Escreva suas memórias, pensamentos ou reflexões..."
               }
               required
               rows={4}
@@ -177,20 +172,13 @@ export function NewMemoryForm({ onClose, onSave, tripId }: NewMemoryFormProps) {
                   required={isCapsule}
                   className="w-full rounded-xl p-3 bg-white/5 border border-white/10 focus:border-teal-400 focus:ring-2 focus:ring-teal-400/20"
                 />
-                <p className="text-white/50">
-                  Esta memória só será revelada na data escolhida
-                </p>
+                <p className="text-white/50">Esta memória só será revelada na data escolhida</p>
               </div>
             )}
           </div>
 
           <div className="flex gap-3 pt-4">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={onClose}
-              className="flex-1"
-            >
+            <Button type="button" variant="outline" onClick={onClose} className="flex-1">
               Cancelar
             </Button>
             <Button type="submit" className="flex-1 bg-teal-400 text-black hover:bg-teal-500">
@@ -200,5 +188,5 @@ export function NewMemoryForm({ onClose, onSave, tripId }: NewMemoryFormProps) {
         </form>
       </div>
     </div>
-  )
+  );
 }
