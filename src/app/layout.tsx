@@ -1,31 +1,24 @@
 import type { Metadata } from "next";
-import React from "react";
-import StyledComponentsRegistry from "./registry";
-import ThemeProvider from "@/styles/ThemeProvider";
-import { AuthProvider } from "@/context/AuthContext";
-import { EventProvider } from "@/context/EventContext";
+import { Inter } from "next/font/google";
+import "./globals.css";
+
+const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "When and Where",
-  description: "Plan every trip",
+  title: "When & Where",
+  description: "Planejador de viagens e eventos com contagem regressiva",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
-      <body>
-        <StyledComponentsRegistry>
-          <ThemeProvider>
-            <AuthProvider>
-              <EventProvider>
-                {" "}
-                {/* ✅ Garante que todas as páginas tenham acesso ao contexto */}
-                {children}
-              </EventProvider>
-            </AuthProvider>
-          </ThemeProvider>
-        </StyledComponentsRegistry>
-      </body>
+    <html lang="pt-BR">
+      <body className={inter.className}>{children}</body>
     </html>
   );
 }
+
+
+
+
+
+
