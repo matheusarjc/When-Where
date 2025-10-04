@@ -7,7 +7,7 @@ import { Language, t } from '../lib/i18n'
 import { UserProfile } from '../lib/types'
 import { setCurrentUser } from '../lib/auth'
 import { auth, googleProvider } from '../lib/firebase'
-import { signInWithPopup, createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile } from 'firebase/auth'
+import { signInWithPopup, signInWithRedirect, createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile } from 'firebase/auth'
 
 interface AuthScreenProps {
   language: Language
@@ -16,6 +16,7 @@ interface AuthScreenProps {
 
 export function AuthScreen({ language, onAuth }: AuthScreenProps) {
   const [isSignup, setIsSignup] = useState(false)
+  const [isAuthLoading, setIsAuthLoading] = useState(false)
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -24,24 +25,42 @@ export function AuthScreen({ language, onAuth }: AuthScreenProps) {
   })
 
   const handleGoogleLogin = async () => {
-    const result = await signInWithPopup(auth, googleProvider)
-    const u = result.user
-    const usernameFromEmail = (u.email || '').split('@')[0] || `user${u.uid.slice(0, 6)}`
-    const profile: UserProfile = {
-      id: u.uid,
-      email: u.email || '',
-      fullName: u.displayName || usernameFromEmail,
-      username: usernameFromEmail.toLowerCase(),
-      avatar: u.photoURL || undefined,
-      bio: undefined,
-      isPublic: true,
-      createdAt: new Date(),
-      following: [],
-      followers: [],
-      pendingRequests: []
+    if (isAuthLoading) return
+    setIsAuthLoading(true)
+    try {
+      const result = await signInWithPopup(auth, googleProvider)
+      const u = result.user
+      const usernameFromEmail = (u.email || '').split('@')[0] || `user${u.uid.slice(0, 6)}`
+      const profile: UserProfile = {
+        id: u.uid,
+        email: u.email || '',
+        fullName: u.displayName || usernameFromEmail,
+        username: usernameFromEmail.toLowerCase(),
+        avatar: u.photoURL || undefined,
+        bio: undefined,
+        isPublic: true,
+        createdAt: new Date(),
+        following: [],
+        followers: [],
+        pendingRequests: []
+      }
+      setCurrentUser(profile)
+      onAuth(profile)
+    } catch (err: any) {
+      const code = err?.code as string | undefined
+      if (code === 'auth/cancelled-popup-request' || code === 'auth/popup-closed-by-user') {
+        // Silenciosamente ignorar; usuário cancelou ou popup concorrente
+        return
+      }
+      if (code === 'auth/popup-blocked') {
+        // Fallback para redirect em navegadores que bloqueiam popup
+        await signInWithRedirect(auth, googleProvider)
+        return
+      }
+      throw err
+    } finally {
+      setIsAuthLoading(false)
     }
-    setCurrentUser(profile)
-    onAuth(profile)
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -132,7 +151,9 @@ export function AuthScreen({ language, onAuth }: AuthScreenProps) {
           {/* Google Sign In */}
           <Button
             onClick={handleGoogleLogin}
-            className="w-full bg-white hover:bg-white/90 text-gray-900 mb-6"
+            disabled={isAuthLoading}
+            aria-disabled={isAuthLoading}
+            className="w-full bg-white hover:bg-white/90 text-gray-900 mb-6 disabled:opacity-60"
           >
             <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
               <path
