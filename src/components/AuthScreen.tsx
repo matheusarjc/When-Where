@@ -6,6 +6,8 @@ import { Input } from './ui/input'
 import { Language, t } from '../lib/i18n'
 import { UserProfile } from '../lib/types'
 import { setCurrentUser } from '../lib/auth'
+import { auth, googleProvider } from '../lib/firebase'
+import { signInWithPopup, createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile } from 'firebase/auth'
 
 interface AuthScreenProps {
   language: Language
@@ -21,48 +23,64 @@ export function AuthScreen({ language, onAuth }: AuthScreenProps) {
     username: ''
   })
 
-  const handleGoogleLogin = () => {
-    // Mock Google login - create demo user
-    const mockUser: UserProfile = {
-      id: `user-${Date.now()}`,
-      email: 'demo@example.com',
-      fullName: 'Demo User',
-      username: 'demouser',
-      avatar: 'https://i.pravatar.cc/150?img=68',
-      bio: '✈️ Explorando o mundo',
+  const handleGoogleLogin = async () => {
+    const result = await signInWithPopup(auth, googleProvider)
+    const u = result.user
+    const usernameFromEmail = (u.email || '').split('@')[0] || `user${u.uid.slice(0, 6)}`
+    const profile: UserProfile = {
+      id: u.uid,
+      email: u.email || '',
+      fullName: u.displayName || usernameFromEmail,
+      username: usernameFromEmail.toLowerCase(),
+      avatar: u.photoURL || undefined,
+      bio: undefined,
       isPublic: true,
       createdAt: new Date(),
       following: [],
       followers: [],
       pendingRequests: []
     }
-    
-    setCurrentUser(mockUser)
-    onAuth(mockUser)
+    setCurrentUser(profile)
+    onAuth(profile)
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
     if (isSignup) {
-      // Create new user
-      const newUser: UserProfile = {
-        id: `user-${Date.now()}`,
-        email: formData.email,
-        fullName: formData.fullName,
-        username: formData.username,
+      const cred = await createUserWithEmailAndPassword(auth, formData.email, formData.password)
+      if (formData.fullName) {
+        try { await updateProfile(cred.user, { displayName: formData.fullName }) } catch {}
+      }
+      const profile: UserProfile = {
+        id: cred.user.uid,
+        email: cred.user.email || formData.email,
+        fullName: formData.fullName || formData.username,
+        username: formData.username || (formData.email.split('@')[0] || `user${cred.user.uid.slice(0, 6)}`),
         isPublic: true,
         createdAt: new Date(),
         following: [],
         followers: [],
         pendingRequests: []
       }
-      
-      setCurrentUser(newUser)
-      onAuth(newUser)
+      setCurrentUser(profile)
+      onAuth(profile)
     } else {
-      // Mock login
-      handleGoogleLogin()
+      const cred = await signInWithEmailAndPassword(auth, formData.email, formData.password)
+      const u = cred.user
+      const usernameFromEmail = (u.email || '').split('@')[0] || `user${u.uid.slice(0, 6)}`
+      const profile: UserProfile = {
+        id: u.uid,
+        email: u.email || formData.email,
+        fullName: u.displayName || usernameFromEmail,
+        username: usernameFromEmail.toLowerCase(),
+        isPublic: true,
+        createdAt: new Date(),
+        following: [],
+        followers: [],
+        pendingRequests: []
+      }
+      setCurrentUser(profile)
+      onAuth(profile)
     }
   }
 

@@ -1,4 +1,6 @@
 import { UserProfile } from './types'
+import { signOut } from 'firebase/auth'
+import { auth } from './firebase'
 
 // Mock auth functions (replace with real Supabase later)
 
@@ -26,7 +28,7 @@ export function isAuthenticated(): boolean {
 
 export function logout() {
   setCurrentUser(null)
-  // Clear other user data if needed
+  try { void signOut(auth) } catch {}
 }
 
 // Mock user database
