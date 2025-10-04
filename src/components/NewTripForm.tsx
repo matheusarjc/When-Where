@@ -4,6 +4,8 @@ import { X } from 'lucide-react'
 import { Button } from './ui/button'
 import { Input } from './ui/input'
 import { Label } from './ui/label'
+import { storage } from '../lib/firebase'
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
 
 interface NewTripFormProps {
   onClose: () => void
@@ -29,15 +31,29 @@ export function NewTripForm({ onClose, onSave }: NewTripFormProps) {
   const [startDate, setStartDate] = useState('')
   const [endDate, setEndDate] = useState('')
   const [selectedCover, setSelectedCover] = useState(DEFAULT_COVERS[0])
+  const [uploading, setUploading] = useState(false)
+  const [file, setFile] = useState<File | null>(null)
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    let coverUrl = selectedCover
+    if (file) {
+      try {
+        setUploading(true)
+        const key = `trip-covers/${Date.now()}-${file.name}`
+        const storageRef = ref(storage, key)
+        await uploadBytes(storageRef, file)
+        coverUrl = await getDownloadURL(storageRef)
+      } finally {
+        setUploading(false)
+      }
+    }
     onSave({
       title,
       location,
       startDate,
       endDate,
-      coverUrl: selectedCover
+      coverUrl
     })
   }
 
@@ -124,6 +140,11 @@ export function NewTripForm({ onClose, onSave }: NewTripFormProps) {
                 </button>
               ))}
             </div>
+            <div className="pt-3">
+              <Label htmlFor="coverUpload">Ou envie sua própria capa</Label>
+              <Input id="coverUpload" type="file" accept="image/*" onChange={(e) => setFile(e.target.files?.[0] || null)} className="bg-white/5 border-white/10 mt-2" />
+              {file && <p className="text-white/40 text-sm mt-1">{file.name}</p>}
+            </div>
           </div>
 
           <div className="flex gap-3 pt-4">
@@ -135,8 +156,8 @@ export function NewTripForm({ onClose, onSave }: NewTripFormProps) {
             >
               Cancelar
             </Button>
-            <Button type="submit" className="flex-1 bg-teal-400 text-black hover:bg-teal-500">
-              Criar Viagem
+            <Button type="submit" disabled={uploading} className="flex-1 bg-teal-400 text-black hover:bg-teal-500 disabled:opacity-60">
+              {uploading ? 'Enviando...' : 'Criar Viagem'}
             </Button>
           </div>
         </form>

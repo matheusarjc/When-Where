@@ -7,6 +7,7 @@ import { Language, t } from "../lib/i18n";
 import { UserProfile } from "../lib/types";
 import { setCurrentUser } from "../lib/auth";
 import { auth, googleProvider } from "../lib/firebase";
+import { upsertUserProfile } from "../lib/user";
 import {
   signInWithPopup,
   signInWithRedirect,
@@ -50,6 +51,7 @@ export function AuthScreen({ language, onAuth }: AuthScreenProps) {
         followers: [],
         pendingRequests: [],
       };
+      await upsertUserProfile(profile);
       setCurrentUser(profile);
       onAuth(profile);
     } catch (err: any) {
@@ -90,6 +92,7 @@ export function AuthScreen({ language, onAuth }: AuthScreenProps) {
         followers: [],
         pendingRequests: [],
       };
+      await upsertUserProfile(profile);
       setCurrentUser(profile);
       onAuth(profile);
     } else {
@@ -107,6 +110,7 @@ export function AuthScreen({ language, onAuth }: AuthScreenProps) {
         followers: [],
         pendingRequests: [],
       };
+      await upsertUserProfile(profile);
       setCurrentUser(profile);
       onAuth(profile);
     }
