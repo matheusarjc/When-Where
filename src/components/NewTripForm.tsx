@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { X } from "lucide-react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
@@ -33,7 +33,15 @@ export function NewTripForm({ onClose, onSave }: NewTripFormProps) {
   const [selectedCover, setSelectedCover] = useState(DEFAULT_COVERS[0]);
   const [uploading, setUploading] = useState(false);
   const [file, setFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    return () => {
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+    };
+  }, [previewUrl]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -156,6 +164,9 @@ export function NewTripForm({ onClose, onSave }: NewTripFormProps) {
                   const f = e.dataTransfer.files?.[0];
                   if (f && f.type.startsWith("image/")) {
                     setFile(f);
+                    const url = URL.createObjectURL(f);
+                    if (previewUrl) URL.revokeObjectURL(previewUrl);
+                    setPreviewUrl(url);
                     setSelectedCover("");
                   }
                 }}
@@ -164,34 +175,67 @@ export function NewTripForm({ onClose, onSave }: NewTripFormProps) {
                     ? "border-teal-400 bg-teal-500/5"
                     : "border-dashed border-white/10 bg-white/5"
                 } text-center transition-colors`}>
-                <div className="mx-auto mb-4 w-12 h-12 rounded-full bg-white/10 flex items-center justify-center">
-                  <svg width="24" height="24" viewBox="0 0 24 24" className="text-white/70">
-                    <path
-                      fill="currentColor"
-                      d="M19 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2m-1 12l-2.5-3l-1.5 2l-2-3l-3 4H6v2h12z"
-                    />
-                  </svg>
-                </div>
-                <label
-                  htmlFor="coverUpload"
-                  className="inline-block px-5 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white cursor-pointer">
-                  Upload
-                </label>
+                {previewUrl ? (
+                  <>
+                    <img src={previewUrl} alt="Preview da capa" className="w-full h-40 object-cover rounded-lg mb-4" />
+                    <div className="flex gap-3 justify-center">
+                      <button
+                        type="button"
+                        onClick={() => fileInputRef.current?.click()}
+                        className="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white"
+                      >
+                        Alterar
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setFile(null);
+                          if (previewUrl) URL.revokeObjectURL(previewUrl);
+                          setPreviewUrl(null);
+                          setSelectedCover(DEFAULT_COVERS[0]);
+                        }}
+                        className="px-4 py-2 rounded-lg bg-white/10 hover:bg-white/15 text-white"
+                      >
+                        Excluir
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="mx-auto mb-4 w-12 h-12 rounded-full bg-white/10 flex items-center justify-center">
+                      <svg width="24" height="24" viewBox="0 0 24 24" className="text-white/70">
+                        <path fill="currentColor" d="M19 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2m-1 12l-2.5-3l-1.5 2l-2-3l-3 4H6v2h12z" />
+                      </svg>
+                    </div>
+                    <label htmlFor="coverUpload" className="inline-block px-5 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white cursor-pointer">Upload</label>
+                    <p className="text-white/60 mt-4">Ou arraste e solte a imagem aqui</p>
+                    <p className="text-white/30 text-sm mt-2">size: 1000×200 px Max: 2 MB</p>
+                  </>
+                )}
                 <input
+                  ref={fileInputRef}
                   id="coverUpload"
                   type="file"
                   accept="image/*"
                   onChange={(e) => {
                     const f = e.target.files?.[0] || null;
                     setFile(f);
-                    if (f) setSelectedCover("");
+                    if (f) {
+                      const url = URL.createObjectURL(f);
+                      if (previewUrl) URL.revokeObjectURL(previewUrl);
+                      setPreviewUrl(url);
+                      setSelectedCover("");
+                    }
                   }}
                   className="hidden"
                 />
-                <p className="text-white/60 mt-4">Ou arraste e solte a imagem aqui</p>
-                <p className="text-white/30 text-sm mt-2">size: 1000×200 px Max: 2 MB</p>
-                {file && <p className="text-white/40 text-sm mt-3">Selecionado: {file.name}</p>}
               </div>
+              {!previewUrl && (
+                <div className="mt-4 flex items-center gap-3">
+                  <img src={DEFAULT_COVERS[0]} alt="Capa padrão" className="w-24 h-16 object-cover rounded-lg border border-white/10" />
+                  <p className="text-white/50 text-sm">Sem upload, usaremos esta imagem padrão.</p>
+                </div>
+              )}
             </div>
           </div>
 
