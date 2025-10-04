@@ -52,6 +52,7 @@ import { Button } from "../components/ui/button";
 import { Language, t } from "../lib/i18n";
 import { UserProfile } from "../lib/types";
 import { getCurrentUser, logout, followUser, unfollowUser } from "../lib/auth";
+import { createTrip, listenUserTrips, TripDoc } from "../lib/trips";
 
 interface UserSettings {
   name: string;
@@ -286,7 +287,7 @@ export default function HomePage() {
     "timeline" | "memories" | "expenses" | "gallery" | "checklist"
   >("timeline");
 
-  // Carregar dados do localStorage apenas uma vez no mount
+  // Carregar dados e iniciar listeners
   useEffect(() => {
     // Check authentication
     const user = getCurrentUser();
@@ -319,12 +320,25 @@ export default function HomePage() {
       setDemoMode(savedDemoMode === "true");
     }
 
-    if (savedTrips) {
-      try {
-        setTrips(JSON.parse(savedTrips));
-      } catch (e) {
-        console.error("Error parsing trips:", e);
-      }
+    // Listener de trips do usuário (Firestore)
+    let unsubscribeTrips: (() => void) | undefined;
+    if (user) {
+      unsubscribeTrips = listenUserTrips(user.id, (docs) => {
+        const mapped = docs.map((d) => ({
+          id: d.id!,
+          userId: d.userId,
+          title: d.title,
+          location: d.location,
+          startDate: d.startDate,
+          endDate: d.endDate,
+          coverUrl: d.coverUrl,
+          isPublic: d.isPublic,
+          collaborators: [],
+          invitedUsers: [],
+          createdAt: new Date().toISOString(),
+        }));
+        setTrips(mapped);
+      });
     }
 
     if (savedEvents) {
@@ -358,6 +372,9 @@ export default function HomePage() {
         console.error("Error parsing checklist:", e);
       }
     }
+    return () => {
+      if (unsubscribeTrips) unsubscribeTrips();
+    };
   }, []);
 
   // Salvar no localStorage (com debounce implícito via useEffect)
@@ -371,15 +388,7 @@ export default function HomePage() {
     }
   }, [userSettings]);
 
-  useEffect(() => {
-    if (trips.length > 0) {
-      try {
-        localStorage.setItem("trips", JSON.stringify(trips));
-      } catch (e) {
-        console.error("Error saving trips:", e);
-      }
-    }
-  }, [trips]);
+  // Removido: trips agora vem do Firestore
 
   useEffect(() => {
     if (events.length > 0) {
@@ -472,22 +481,22 @@ export default function HomePage() {
     setShowSettings(false);
   };
 
-  const handleCreateTrip = (
+  const handleCreateTrip = async (
     tripData: Omit<
       Trip,
       "id" | "userId" | "collaborators" | "invitedUsers" | "createdAt" | "isPublic"
     >
   ) => {
-    const newTrip: Trip = {
-      id: Date.now().toString(),
-      userId: currentUser?.id || "demo-user",
+    if (!currentUser) return;
+    await createTrip({
+      userId: currentUser.id,
+      title: tripData.title,
+      location: tripData.location,
+      startDate: tripData.startDate,
+      endDate: tripData.endDate,
+      coverUrl: tripData.coverUrl,
       isPublic: true,
-      collaborators: [],
-      invitedUsers: [],
-      createdAt: new Date().toISOString(),
-      ...tripData,
-    };
-    setTrips([...trips, newTrip]);
+    });
     setShowNewTripForm(false);
     if (demoMode) setDemoMode(false);
 
