@@ -8,6 +8,10 @@ const config: Config = {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        poppins: ["var(--font-poppins)", "Poppins", "system-ui", "sans-serif"],
+        sans: ["var(--font-poppins)", "Poppins", "system-ui", "sans-serif"],
+      },
       colors: {
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
@@ -49,11 +53,48 @@ const config: Config = {
           "4": "hsl(var(--chart-4))",
           "5": "hsl(var(--chart-5))",
         },
+        // Custom theme colors
+        teal: {
+          400: "rgb(var(--teal-400))",
+          500: "rgb(var(--teal-500))",
+          600: "rgb(var(--teal-600))",
+        },
+        purple: {
+          400: "rgb(var(--purple-400))",
+          500: "rgb(var(--purple-500))",
+        },
+        blue: {
+          400: "rgb(var(--blue-400))",
+          500: "rgb(var(--blue-500))",
+        },
+        pink: {
+          400: "rgb(var(--pink-400))",
+          500: "rgb(var(--pink-500))",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
+      },
+      animation: {
+        "fade-in": "fadeIn 0.5s ease-in-out",
+        "slide-up": "slideUp 0.3s ease-out",
+        "scale-in": "scaleIn 0.2s ease-out",
+      },
+      keyframes: {
+        fadeIn: {
+          "0%": { opacity: "0" },
+          "100%": { opacity: "1" },
+        },
+        slideUp: {
+          "0%": { opacity: "0", transform: "translateY(20px)" },
+          "100%": { opacity: "1", transform: "translateY(0)" },
+        },
+        scaleIn: {
+          "0%": { opacity: "0", transform: "scale(0.95)" },
+          "100%": { opacity: "1", transform: "scale(1)" },
+        },
       },
     },
   },

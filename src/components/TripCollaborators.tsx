@@ -39,8 +39,9 @@ export function TripCollaborators({
   const handleSearch = (query: string) => {
     setSearchQuery(query)
     if (query.trim().length > 0) {
+      const collaboratorIds = collaborators.map(c => c.userId)
       const results = searchUsers(query)
-        .filter(u => u.id !== currentUserId && u.id !== ownerId && !collaborators.includes(u.id) && !invitedUsers.includes(u.id))
+        .filter(u => u.id !== currentUserId && u.id !== ownerId && !collaboratorIds.includes(u.id) && !invitedUsers.includes(u.id))
       setSearchResults(results)
     } else {
       setSearchResults([])

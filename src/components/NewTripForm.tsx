@@ -120,7 +120,7 @@ export function NewTripForm({ onClose, onSave }: NewTripFormProps) {
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
       <div className="w-full max-w-2xl rounded-3xl border border-white/10 bg-[#0a0a0a] p-6 max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl">Nova Viagem</h2>
+          <h2 className="text-2x1">Nova Viagem</h2>
           <button
             onClick={onClose}
             className="rounded-full p-2 hover:bg-white/10 transition-colors"

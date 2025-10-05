@@ -13,6 +13,7 @@ interface Expense {
   currency: string
   description: string
   date: string
+  tripId?: string
 }
 
 interface ExpenseManagerProps {
