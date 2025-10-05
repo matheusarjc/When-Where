@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import { X } from "lucide-react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
@@ -7,6 +7,8 @@ import { Label } from "./ui/label";
 import { storage } from "../lib/firebase";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import DefaultCover from "../assets/Default_BgFallback.png";
+import { OptimizedLoading } from "./OptimizedLoading";
+import { motion } from "motion/react";
 
 interface NewTripFormProps {
   onClose: () => void;
@@ -33,36 +35,120 @@ export function NewTripForm({ onClose, onSave }: NewTripFormProps) {
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [error, setError] = useState<string | null>(null);
+  const [uploadProgress, setUploadProgress] = useState(0);
 
+  // Memoizar validação do formulário
+  const isFormValid = useMemo(() => {
+    return title.trim() && location.trim() && startDate && endDate;
+  }, [title, location, startDate, endDate]);
+
+  // Otimizar limpeza de recursos
   useEffect(() => {
     return () => {
-      if (previewUrl) URL.revokeObjectURL(previewUrl);
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl);
+      }
     };
   }, [previewUrl]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    let coverUrl = selectedCover;
-    if (file) {
-      try {
-        setUploading(true);
-        const key = `trip-covers/${Date.now()}-${file.name}`;
-        const storageRef = ref(storage, key);
-        const blob = await resizeImageToCover(file, 1000, 200);
-        await uploadBytes(storageRef, blob, { contentType: blob.type });
-        coverUrl = await getDownloadURL(storageRef);
-      } finally {
-        setUploading(false);
-      }
-    }
-    onSave({
-      title,
-      location,
-      startDate,
-      endDate,
-      coverUrl,
+  // Função otimizada para redimensionar imagem
+  const resizeImage = useCallback((file: File): Promise<File> => {
+    return new Promise((resolve) => {
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d");
+      const img = new Image();
+
+      img.onload = () => {
+        const maxWidth = 1000;
+        const maxHeight = 200;
+        let { width, height } = img;
+
+        if (width > maxWidth || height > maxHeight) {
+          const ratio = Math.min(maxWidth / width, maxHeight / height);
+          width *= ratio;
+          height *= ratio;
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+
+        ctx?.drawImage(img, 0, 0, width, height);
+
+        canvas.toBlob(
+          (blob) => {
+            if (blob) {
+              const resizedFile = new File([blob], file.name, {
+                type: "image/jpeg",
+                lastModified: Date.now(),
+              });
+              resolve(resizedFile);
+            } else {
+              resolve(file);
+            }
+          },
+          "image/jpeg",
+          0.8
+        );
+      };
+
+      img.src = URL.createObjectURL(file);
     });
-  };
+  }, []);
+
+  const handleSubmit = useCallback(
+    async (e: React.FormEvent) => {
+      e.preventDefault();
+
+      if (!isFormValid) {
+        setError("Preencha todos os campos obrigatórios");
+        return;
+      }
+
+      let coverUrl = selectedCover;
+
+      if (file) {
+        try {
+          setUploading(true);
+          setUploadProgress(0);
+          setError(null);
+
+          // Simular progresso do upload
+          const progressInterval = setInterval(() => {
+            setUploadProgress((prev) => Math.min(prev + 10, 90));
+          }, 100);
+
+          const key = `trip-covers/${Date.now()}-${file.name}`;
+          const storageRef = ref(storage, key);
+          const blob = await resizeImageToCover(file, 1000, 200);
+          await uploadBytes(storageRef, blob, { contentType: blob.type });
+          coverUrl = await getDownloadURL(storageRef);
+
+          clearInterval(progressInterval);
+          setUploadProgress(100);
+
+          // Pequeno delay para mostrar progresso completo
+          await new Promise((resolve) => setTimeout(resolve, 200));
+        } catch (error) {
+          console.error("Erro ao fazer upload:", error);
+          setError("Erro ao fazer upload da imagem");
+          setUploading(false);
+          setUploadProgress(0);
+          return;
+        } finally {
+          setUploading(false);
+        }
+      }
+
+      onSave({
+        title,
+        location,
+        startDate,
+        endDate,
+        coverUrl,
+      });
+    },
+    [title, location, startDate, endDate, selectedCover, file, isFormValid, onSave]
+  );
 
   function validateAndPreview(f: File | null) {
     if (!f) return;
@@ -274,15 +360,38 @@ export function NewTripForm({ onClose, onSave }: NewTripFormProps) {
           </div>
 
           <div className="flex gap-3 pt-4">
-            <Button type="button" variant="outline" onClick={onClose} className="flex-1">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onClose}
+              className="flex-1"
+              disabled={uploading}>
               Cancelar
             </Button>
-            <Button
-              type="submit"
-              disabled={uploading}
-              className="flex-1 bg-teal-400 text-black hover:bg-teal-500 disabled:opacity-60">
-              {uploading ? "Enviando..." : "Criar Viagem"}
-            </Button>
+            <div className="flex-1 relative">
+              <Button
+                type="submit"
+                disabled={uploading || !isFormValid}
+                className="w-full bg-teal-400 text-black hover:bg-teal-500 disabled:opacity-60">
+                {uploading ? (
+                  <div className="flex items-center gap-2">
+                    <OptimizedLoading size="sm" variant="spinner" />
+                    <span>Enviando... {uploadProgress}%</span>
+                  </div>
+                ) : (
+                  "Criar Viagem"
+                )}
+              </Button>
+
+              {/* Barra de progresso */}
+              {uploading && (
+                <motion.div
+                  initial={{ width: 0 }}
+                  animate={{ width: `${uploadProgress}%` }}
+                  className="absolute bottom-0 left-0 h-1 bg-teal-300 rounded-full"
+                />
+              )}
+            </div>
           </div>
         </form>
       </div>
