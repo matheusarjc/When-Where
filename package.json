@@ -9,7 +9,10 @@
     "start": "next start",
     "lint": "next lint",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "analyze": "ANALYZE=true next build",
+    "analyze:server": "ANALYZE=true next build --debug",
+    "analyze:bundle": "npx @next/bundle-analyzer"
   },
   "dependencies": {
     "@radix-ui/react-accordion": "^1.2.3",

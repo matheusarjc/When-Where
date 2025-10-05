@@ -204,7 +204,7 @@ export function NewTripForm({ onClose, onSave }: NewTripFormProps) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-      <div className="w-full max-w-2xl rounded-3xl border border-white/10 bg-[#0a0a0a] p-6 max-h-[90vh] overflow-y-auto">
+      <div className="w-full max-w-2xl rounded-3xl border border-white/10 bg-[#0a0a0a] py-6 px-4 max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-2x1">Nova Viagem</h2>
           <button
@@ -249,7 +249,7 @@ export function NewTripForm({ onClose, onSave }: NewTripFormProps) {
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
                 required
-                className="bg-white/5 border-white/10"
+                className="bg-white/5 border-white/10 text-xs lg:text-base"
               />
             </div>
 
@@ -261,7 +261,7 @@ export function NewTripForm({ onClose, onSave }: NewTripFormProps) {
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
                 required
-                className="bg-white/5 border-white/10"
+                className="bg-white/5 border-white/10 text-xs lg:text-base"
               />
             </div>
           </div>

@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useCallback, Suspense } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "motion/react";
 import {
   Plus,
@@ -25,34 +25,38 @@ import { TimelineItem } from "../components/TimelineItem";
 import { MemoryCard } from "../components/MemoryCard";
 import { DynamicCover } from "../components/DynamicCover";
 import { Countdown } from "../components/Countdown";
-import { NewTripForm } from "../components/NewTripForm";
-import { NewEventForm } from "../components/NewEventForm";
-import { NewMemoryForm } from "../components/NewMemoryForm";
 import { OnboardingForm } from "../components/OnboardingForm";
-import { SettingsForm } from "../components/SettingsForm";
 import { SearchBar } from "../components/SearchBar";
 import { FilterPanel, FilterType } from "../components/FilterPanel";
-import { PhotoGallery } from "../components/PhotoGallery";
 import { Toast } from "../components/Toast";
 import { ProgressBadge } from "../components/ProgressBadge";
 import { QuickAction } from "../components/QuickAction";
 import { AuthScreen } from "../components/AuthScreen";
-import { ProfilePage } from "../components/ProfilePage";
-import { SearchUsers } from "../components/SearchUsers";
 import { ProfileMenu } from "../components/ProfileMenu";
-import { ExpenseManager } from "../components/ExpenseManager";
-import { ExpenseOverview } from "../components/ExpenseOverview";
 import { ExpenseCard } from "../components/ExpenseCard";
-import { NewExpenseForm } from "../components/NewExpenseForm";
 import { TripTabs } from "../components/TripTabs";
-import { TripCollaborators } from "../components/TripCollaborators";
 import { TripInvites } from "../components/TripInvites";
 import { TravelChecklist } from "../components/TravelChecklist";
 import { Button } from "../components/ui/button";
+import { OptimizedLoading } from "../components/OptimizedLoading";
+import {
+  LazyExpenseManager,
+  LazyPhotoGallery,
+  LazyTripCollaborators,
+  LazySearchUsers,
+  LazyProfilePage,
+  LazyExpenseOverview,
+  LazyNewTripForm,
+  LazyNewEventForm,
+  LazyNewMemoryForm,
+  LazySettingsForm,
+  LazyNewExpenseForm,
+} from "../components/LazyComponent";
 import { Language, t } from "../lib/i18n";
 import { UserProfile } from "../lib/types";
 import { getCurrentUser, logout, followUser, unfollowUser } from "../lib/auth";
 import { createTrip, listenUserTrips, TripDoc } from "../lib/trips";
+import { useLocalStorage } from "../hooks/useLocalStorage";
 
 interface UserSettings {
   name: string;
@@ -249,18 +253,24 @@ const DEMO_MEMORIES: Memory[] = [
 export default function HomePage() {
   const prefersReducedMotion = useReducedMotion();
   const [currentUser, setCurrentUserState] = useState<UserProfile | null>(null);
-  const [userSettings, setUserSettings] = useState<UserSettings>({
+
+  // Usar hooks otimizados para localStorage
+  const [userSettings, setUserSettings] = useLocalStorage<UserSettings>("userSettings", {
     name: "",
     language: "pt-BR",
     theme: "teal",
     onboarded: false,
   });
+  const [demoMode, setDemoMode] = useLocalStorage<boolean>("demoMode", true);
+  const [events, setEvents] = useLocalStorage<Event[]>("events", []);
+  const [memories, setMemories] = useLocalStorage<Memory[]>("memories", []);
+  const [expenses, setExpenses] = useLocalStorage<Expense[]>("expenses", []);
+  const [checklistItems, setChecklistItems] = useLocalStorage<ChecklistItem[]>("checklist", []);
 
   const [currentView, setCurrentView] = useState<View>("dashboard");
   const [selectedTripId, setSelectedTripId] = useState<string | null>(null);
   const [selectedExpenseTripId, setSelectedExpenseTripId] = useState<string | null>(null);
   const [selectedProfile, setSelectedProfile] = useState<UserProfile | null>(null);
-  const [demoMode, setDemoMode] = useState(true);
   const [showSuccessAnimation, setShowSuccessAnimation] = useState(false);
   const [toast, setToast] = useState<{
     message: string;
@@ -269,10 +279,6 @@ export default function HomePage() {
   const [showSearchUsers, setShowSearchUsers] = useState(false);
 
   const [trips, setTrips] = useState<Trip[]>([]);
-  const [events, setEvents] = useState<Event[]>([]);
-  const [memories, setMemories] = useState<Memory[]>([]);
-  const [expenses, setExpenses] = useState<Expense[]>([]);
-  const [checklistItems, setChecklistItems] = useState<ChecklistItem[]>([]);
 
   const [showNewTripForm, setShowNewTripForm] = useState(false);
   const [showNewEventForm, setShowNewEventForm] = useState(false);
@@ -293,37 +299,19 @@ export default function HomePage() {
     const user = getCurrentUser();
     if (user) {
       setCurrentUserState(user);
-    }
 
-    // Load saved data
-    const savedSettings = localStorage.getItem("userSettings");
-    const savedTrips = localStorage.getItem("trips");
-    const savedEvents = localStorage.getItem("events");
-    const savedMemories = localStorage.getItem("memories");
-    const savedExpenses = localStorage.getItem("expenses");
-    const savedChecklist = localStorage.getItem("checklist");
-    const savedDemoMode = localStorage.getItem("demoMode");
+      // Configurar settings iniciais se não onboarded
+      if (!userSettings.onboarded) {
+        setUserSettings({
+          name: user.fullName,
+          language: "pt-BR",
+          theme: "teal",
+          onboarded: true,
+        });
+      }
 
-    if (savedSettings) {
-      const settings = JSON.parse(savedSettings);
-      setUserSettings(settings);
-    } else if (user) {
-      setUserSettings({
-        name: user.fullName,
-        language: "pt-BR",
-        theme: "teal",
-        onboarded: true,
-      });
-    }
-
-    if (savedDemoMode !== null) {
-      setDemoMode(savedDemoMode === "true");
-    }
-
-    // Listener de trips do usuário (Firestore)
-    let unsubscribeTrips: (() => void) | undefined;
-    if (user) {
-      unsubscribeTrips = listenUserTrips(user.id, (docs) => {
+      // Listener de trips do usuário (Firestore)
+      const unsubscribeTrips = listenUserTrips(user.id, (docs) => {
         const mapped = docs.map((d) => ({
           id: d.id!,
           userId: d.userId,
@@ -339,175 +327,131 @@ export default function HomePage() {
         }));
         setTrips(mapped);
       });
+
+      return () => {
+        unsubscribeTrips();
+      };
     }
+  }, [userSettings.onboarded, setUserSettings]);
 
-    if (savedEvents) {
-      try {
-        setEvents(JSON.parse(savedEvents));
-      } catch (e) {
-        console.error("Error parsing events:", e);
-      }
-    }
+  // Memoizar dados computados
+  const displayTrips = useMemo(() => (demoMode ? DEMO_TRIPS : trips), [demoMode, trips]);
+  const displayEvents = useMemo(() => (demoMode ? DEMO_EVENTS : events), [demoMode, events]);
+  const displayMemories = useMemo(
+    () => (demoMode ? DEMO_MEMORIES : memories),
+    [demoMode, memories]
+  );
 
-    if (savedMemories) {
-      try {
-        setMemories(JSON.parse(savedMemories));
-      } catch (e) {
-        console.error("Error parsing memories:", e);
-      }
-    }
+  // Memoizar computações derivadas
+  const selectedTrip = useMemo(
+    () => displayTrips.find((t) => t.id === selectedTripId),
+    [displayTrips, selectedTripId]
+  );
 
-    if (savedExpenses) {
-      try {
-        setExpenses(JSON.parse(savedExpenses));
-      } catch (e) {
-        console.error("Error parsing expenses:", e);
-      }
-    }
+  const tripEvents = useMemo(
+    () => displayEvents.filter((e) => e.tripId === selectedTripId),
+    [displayEvents, selectedTripId]
+  );
 
-    if (savedChecklist) {
-      try {
-        setChecklistItems(JSON.parse(savedChecklist));
-      } catch (e) {
-        console.error("Error parsing checklist:", e);
-      }
-    }
-    return () => {
-      if (unsubscribeTrips) unsubscribeTrips();
-    };
-  }, []);
+  const tripMemories = useMemo(
+    () => displayMemories.filter((m) => m.tripId === selectedTripId),
+    [displayMemories, selectedTripId]
+  );
 
-  // Salvar no localStorage (com debounce implícito via useEffect)
-  useEffect(() => {
-    if (userSettings.onboarded && userSettings.name) {
-      try {
-        localStorage.setItem("userSettings", JSON.stringify(userSettings));
-      } catch (e) {
-        console.error("Error saving settings:", e);
-      }
-    }
-  }, [userSettings]);
-
-  // Removido: trips agora vem do Firestore
-
-  useEffect(() => {
-    if (events.length > 0) {
-      try {
-        localStorage.setItem("events", JSON.stringify(events));
-      } catch (e) {
-        console.error("Error saving events:", e);
-      }
-    }
-  }, [events]);
-
-  useEffect(() => {
-    if (memories.length > 0) {
-      try {
-        localStorage.setItem("memories", JSON.stringify(memories));
-      } catch (e) {
-        console.error("Error saving memories:", e);
-      }
-    }
-  }, [memories]);
-
-  useEffect(() => {
-    if (expenses.length > 0) {
-      try {
-        localStorage.setItem("expenses", JSON.stringify(expenses));
-      } catch (e) {
-        console.error("Error saving expenses:", e);
-      }
-    }
-  }, [expenses]);
-
-  useEffect(() => {
-    if (checklistItems.length > 0) {
-      try {
-        localStorage.setItem("checklist", JSON.stringify(checklistItems));
-      } catch (e) {
-        console.error("Error saving checklist:", e);
-      }
-    }
-  }, [checklistItems]);
-
-  const displayTrips = demoMode ? DEMO_TRIPS : trips;
-  const displayEvents = demoMode ? DEMO_EVENTS : events;
-  const displayMemories = demoMode ? DEMO_MEMORIES : memories;
-
-  const selectedTrip = displayTrips.find((t) => t.id === selectedTripId);
-  const tripEvents = displayEvents.filter((e) => e.tripId === selectedTripId);
-  const tripMemories = displayMemories.filter((m) => m.tripId === selectedTripId);
-
-  const nextTrip = displayTrips
-    .filter((t) => new Date(t.startDate) > new Date())
-    .sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime())[0];
+  const nextTrip = useMemo(
+    () =>
+      displayTrips
+        .filter((t) => new Date(t.startDate) > new Date())
+        .sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime())[0],
+    [displayTrips]
+  );
 
   // Filtrar e buscar memórias
-  const filteredMemories = displayMemories.filter((memory) => {
-    const matchesSearch = memory.content.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesFilter =
-      activeFilter === "all" ||
-      (activeFilter === "capsule" && memory.openAt) ||
-      (activeFilter !== "capsule" && memory.type === activeFilter);
-    return matchesSearch && matchesFilter;
-  });
+  const filteredMemories = useMemo(
+    () =>
+      displayMemories.filter((memory) => {
+        const matchesSearch = memory.content.toLowerCase().includes(searchQuery.toLowerCase());
+        const matchesFilter =
+          activeFilter === "all" ||
+          (activeFilter === "capsule" && memory.openAt) ||
+          (activeFilter !== "capsule" && memory.type === activeFilter);
+        return matchesSearch && matchesFilter;
+      }),
+    [displayMemories, searchQuery, activeFilter]
+  );
 
   // Contar memórias por tipo
-  const memoryCounts = {
-    all: displayMemories.length,
-    note: displayMemories.filter((m) => m.type === "note").length,
-    photo: displayMemories.filter((m) => m.type === "photo").length,
-    tip: displayMemories.filter((m) => m.type === "tip").length,
-    capsule: displayMemories.filter((m) => m.openAt).length,
-  };
+  const memoryCounts = useMemo(
+    () => ({
+      all: displayMemories.length,
+      note: displayMemories.filter((m) => m.type === "note").length,
+      photo: displayMemories.filter((m) => m.type === "photo").length,
+      tip: displayMemories.filter((m) => m.type === "tip").length,
+      capsule: displayMemories.filter((m) => m.openAt).length,
+    }),
+    [displayMemories]
+  );
 
   // Extrair fotos para galeria
-  const photoMemories = displayMemories
-    .filter((m) => m.type === "photo" && m.mediaUrl)
-    .map((m) => ({
-      id: m.id,
-      url: m.mediaUrl!,
-      caption: m.content,
-      date: m.createdAt,
-    }));
+  const photoMemories = useMemo(
+    () =>
+      displayMemories
+        .filter((m) => m.type === "photo" && m.mediaUrl)
+        .map((m) => ({
+          id: m.id,
+          url: m.mediaUrl!,
+          caption: m.content,
+          date: m.createdAt,
+        })),
+    [displayMemories]
+  );
 
-  const handleOnboardingComplete = (data: Omit<UserSettings, "onboarded">) => {
-    const newSettings = { ...data, onboarded: true };
-    setUserSettings(newSettings);
-  };
+  const handleOnboardingComplete = useCallback(
+    (data: Omit<UserSettings, "onboarded">) => {
+      const newSettings = { ...data, onboarded: true };
+      setUserSettings(newSettings);
+    },
+    [setUserSettings]
+  );
 
-  const handleSettingsSave = (settings: Omit<UserSettings, "onboarded">) => {
-    setUserSettings({ ...settings, onboarded: true });
-    setShowSettings(false);
-  };
+  const handleSettingsSave = useCallback(
+    (settings: Omit<UserSettings, "onboarded">) => {
+      setUserSettings({ ...settings, onboarded: true });
+      setShowSettings(false);
+    },
+    [setUserSettings]
+  );
 
-  const handleCreateTrip = async (
-    tripData: Omit<
-      Trip,
-      "id" | "userId" | "collaborators" | "invitedUsers" | "createdAt" | "isPublic"
-    >
-  ) => {
-    if (!currentUser) return;
-    await createTrip({
-      userId: currentUser.id,
-      title: tripData.title,
-      location: tripData.location,
-      startDate: tripData.startDate,
-      endDate: tripData.endDate,
-      coverUrl: tripData.coverUrl,
-      isPublic: true,
-    });
-    setShowNewTripForm(false);
-    if (demoMode) setDemoMode(false);
+  const handleCreateTrip = useCallback(
+    async (
+      tripData: Omit<
+        Trip,
+        "id" | "userId" | "collaborators" | "invitedUsers" | "createdAt" | "isPublic"
+      >
+    ) => {
+      if (!currentUser) return;
+      await createTrip({
+        userId: currentUser.id,
+        title: tripData.title,
+        location: tripData.location,
+        startDate: tripData.startDate,
+        endDate: tripData.endDate,
+        coverUrl: tripData.coverUrl,
+        isPublic: true,
+      });
+      setShowNewTripForm(false);
+      if (demoMode) setDemoMode(false);
 
-    // Show success animation and toast
-    setShowSuccessAnimation(true);
-    setTimeout(() => setShowSuccessAnimation(false), 2000);
-    setToast({
-      message: t("toast.tripCreated", userSettings.language) || "✨ Viagem criada com sucesso!",
-      type: "success",
-    });
-  };
+      // Show success animation and toast
+      setShowSuccessAnimation(true);
+      setTimeout(() => setShowSuccessAnimation(false), 2000);
+      setToast({
+        message: t("toast.tripCreated", userSettings.language) || "✨ Viagem criada com sucesso!",
+        type: "success",
+      });
+    },
+    [currentUser, demoMode, setDemoMode, userSettings.language]
+  );
 
   const handleCreateEvent = (eventData: Omit<Event, "id" | "tripId">) => {
     const newEvent: Event = {
@@ -637,7 +581,7 @@ END:VCALENDAR`;
     show: {
       opacity: 1,
       transition: {
-        staggerChildren: prefersReducedMotion ? 0 : 0.1,
+        staggerChildren: prefersReducedMotion ? 0 : 0.05,
       },
     },
   };
@@ -1210,16 +1154,25 @@ END:VCALENDAR`;
                         <p className="text-white/30">Sem fotos ainda</p>
                       </div>
                     ) : (
-                      <PhotoGallery
-                        photos={tripMemories
-                          .filter((m) => m.type === "photo" && m.mediaUrl)
-                          .map((m) => ({
-                            id: m.id,
-                            url: m.mediaUrl!,
-                            caption: m.content,
-                            date: m.createdAt,
-                          }))}
-                      />
+                      <Suspense
+                        fallback={
+                          <OptimizedLoading
+                            size="md"
+                            variant="spinner"
+                            message="Carregando galeria..."
+                          />
+                        }>
+                        <LazyPhotoGallery
+                          photos={tripMemories
+                            .filter((m) => m.type === "photo" && m.mediaUrl)
+                            .map((m) => ({
+                              id: m.id,
+                              url: m.mediaUrl!,
+                              caption: m.content,
+                              date: m.createdAt,
+                            }))}
+                        />
+                      </Suspense>
                     )}
                   </div>
                 )}
@@ -1238,15 +1191,17 @@ END:VCALENDAR`;
               </div>
 
               <div>
-                <TripCollaborators
-                  tripId={selectedTrip.id}
-                  ownerId={selectedTrip.userId}
-                  currentUserId={currentUser?.id || "demo-user"}
-                  collaborators={selectedTrip.collaborators}
-                  invitedUsers={selectedTrip.invitedUsers}
-                  language={userSettings.language}
-                  onInvite={handleInviteCollaborator}
-                />
+                <Suspense fallback={<OptimizedLoading size="sm" variant="skeleton" />}>
+                  <LazyTripCollaborators
+                    tripId={selectedTrip.id}
+                    ownerId={selectedTrip.userId}
+                    currentUserId={currentUser?.id || "demo-user"}
+                    collaborators={selectedTrip.collaborators}
+                    invitedUsers={selectedTrip.invitedUsers}
+                    language={userSettings.language}
+                    onInvite={handleInviteCollaborator}
+                  />
+                </Suspense>
               </div>
             </div>
           </motion.div>
@@ -1318,18 +1273,20 @@ END:VCALENDAR`;
         )}
 
         {currentView === "profile" && selectedProfile && currentUser && (
-          <ProfilePage
-            user={selectedProfile}
-            isOwnProfile={selectedProfile.id === currentUser.id}
-            language={userSettings.language}
-            trips={selectedProfile.id === currentUser.id ? displayTrips : []}
-            onBack={() => setCurrentView("dashboard")}
-            onViewTrip={handleViewTrip}
-            isFollowing={currentUser.following?.includes(selectedProfile.id) || false}
-            onFollow={handleFollowUser}
-            onUnfollow={handleUnfollowUser}
-            userSettings={userSettings}
-          />
+          <Suspense fallback={<OptimizedLoading size="lg" variant="skeleton" fullScreen />}>
+            <LazyProfilePage
+              user={selectedProfile}
+              isOwnProfile={selectedProfile.id === currentUser.id}
+              language={userSettings.language}
+              trips={selectedProfile.id === currentUser.id ? displayTrips : []}
+              onBack={() => setCurrentView("dashboard")}
+              onViewTrip={handleViewTrip}
+              isFollowing={currentUser.following?.includes(selectedProfile.id) || false}
+              onFollow={handleFollowUser}
+              onUnfollow={handleUnfollowUser}
+              userSettings={userSettings}
+            />
+          </Suspense>
         )}
 
         {currentView === "gallery" && (
@@ -1355,81 +1312,102 @@ END:VCALENDAR`;
                 <p className="text-white/30">Sem fotos ainda</p>
               </div>
             ) : (
-              <PhotoGallery photos={photoMemories} />
+              <Suspense
+                fallback={
+                  <OptimizedLoading size="md" variant="spinner" message="Carregando galeria..." />
+                }>
+                <LazyPhotoGallery photos={photoMemories} />
+              </Suspense>
             )}
           </motion.div>
         )}
 
         {currentView === "expenses" && !selectedExpenseTripId && (
-          <ExpenseOverview
-            trips={displayTrips}
-            expenses={expenses}
-            language={userSettings.language}
-            onSelectTrip={(tripId) => setSelectedExpenseTripId(tripId)}
-            onBack={() => setCurrentView("dashboard")}
-          />
+          <Suspense fallback={<OptimizedLoading size="lg" variant="skeleton" fullScreen />}>
+            <LazyExpenseOverview
+              trips={displayTrips}
+              expenses={expenses}
+              language={userSettings.language}
+              onSelectTrip={(tripId) => setSelectedExpenseTripId(tripId)}
+              onBack={() => setCurrentView("dashboard")}
+            />
+          </Suspense>
         )}
 
         {currentView === "expenses" && selectedExpenseTripId && (
-          <ExpenseManager
-            expenses={expenses}
-            language={userSettings.language}
-            tripId={selectedExpenseTripId}
-            tripTitle={displayTrips.find((t) => t.id === selectedExpenseTripId)?.title}
-            onBack={() => setSelectedExpenseTripId(null)}
-            onAddExpense={() => setShowNewExpenseForm(true)}
-          />
+          <Suspense fallback={<OptimizedLoading size="lg" variant="skeleton" fullScreen />}>
+            <LazyExpenseManager
+              expenses={expenses}
+              language={userSettings.language}
+              tripId={selectedExpenseTripId}
+              tripTitle={displayTrips.find((t) => t.id === selectedExpenseTripId)?.title}
+              onBack={() => setSelectedExpenseTripId(null)}
+              onAddExpense={() => setShowNewExpenseForm(true)}
+            />
+          </Suspense>
         )}
       </AnimatePresence>
 
       {/* Search Users Modal */}
       <AnimatePresence>
         {showSearchUsers && currentUser && (
-          <SearchUsers
-            language={userSettings.language}
-            currentUserId={currentUser.id}
-            onSelectUser={handleViewProfile}
-            onClose={() => setShowSearchUsers(false)}
-          />
+          <Suspense fallback={<OptimizedLoading size="md" variant="spinner" fullScreen />}>
+            <LazySearchUsers
+              language={userSettings.language}
+              currentUserId={currentUser.id}
+              onSelectUser={handleViewProfile}
+              onClose={() => setShowSearchUsers(false)}
+            />
+          </Suspense>
         )}
       </AnimatePresence>
 
       {/* Forms */}
       {showNewTripForm && (
-        <NewTripForm onClose={() => setShowNewTripForm(false)} onSave={handleCreateTrip} />
+        <Suspense fallback={<OptimizedLoading size="md" variant="spinner" fullScreen />}>
+          <LazyNewTripForm onClose={() => setShowNewTripForm(false)} onSave={handleCreateTrip} />
+        </Suspense>
       )}
 
       {showNewEventForm && (
-        <NewEventForm
-          onClose={() => setShowNewEventForm(false)}
-          onSave={handleCreateEvent}
-          tripId={selectedTripId || undefined}
-        />
+        <Suspense fallback={<OptimizedLoading size="md" variant="spinner" fullScreen />}>
+          <LazyNewEventForm
+            onClose={() => setShowNewEventForm(false)}
+            onSave={handleCreateEvent}
+            tripId={selectedTripId || undefined}
+          />
+        </Suspense>
       )}
 
       {showNewMemoryForm && (
-        <NewMemoryForm
-          onClose={() => setShowNewMemoryForm(false)}
-          onSave={handleCreateMemory}
-          tripId={selectedTripId || undefined}
-        />
+        <Suspense fallback={<OptimizedLoading size="md" variant="spinner" fullScreen />}>
+          <LazyNewMemoryForm
+            onClose={() => setShowNewMemoryForm(false)}
+            onSave={handleCreateMemory}
+            tripId={selectedTripId || undefined}
+          />
+        </Suspense>
       )}
 
       {showSettings && (
-        <SettingsForm
-          currentSettings={userSettings}
-          onClose={() => setShowSettings(false)}
-          onSave={handleSettingsSave}
-        />
+        <Suspense fallback={<OptimizedLoading size="md" variant="spinner" fullScreen />}>
+          <LazySettingsForm
+            currentSettings={userSettings}
+            onClose={() => setShowSettings(false)}
+            onSave={handleSettingsSave}
+          />
+        </Suspense>
       )}
 
       {showNewExpenseForm && (
-        <NewExpenseForm
-          onClose={() => setShowNewExpenseForm(false)}
-          onSave={handleCreateExpense}
-          tripId={selectedTripId || selectedExpenseTripId || undefined}
-          language={userSettings.language}
-        />
+        <Suspense fallback={<OptimizedLoading size="md" variant="spinner" fullScreen />}>
+          <LazyNewExpenseForm
+            onClose={() => setShowNewExpenseForm(false)}
+            onSave={handleCreateExpense}
+            tripId={selectedTripId || selectedExpenseTripId || undefined}
+            language={userSettings.language}
+          />
+        </Suspense>
       )}
 
       {/* Toast */}

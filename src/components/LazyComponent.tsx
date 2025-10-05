@@ -36,3 +36,24 @@ export const LazyTripCollaborators = lazy(() =>
 export const LazySearchUsers = lazy(() =>
   import("./SearchUsers").then((module) => ({ default: module.SearchUsers }))
 );
+export const LazyProfilePage = lazy(() =>
+  import("./ProfilePage").then((module) => ({ default: module.ProfilePage }))
+);
+export const LazyExpenseOverview = lazy(() =>
+  import("./ExpenseOverview").then((module) => ({ default: module.ExpenseOverview }))
+);
+export const LazyNewTripForm = lazy(() =>
+  import("./NewTripForm").then((module) => ({ default: module.NewTripForm }))
+);
+export const LazyNewEventForm = lazy(() =>
+  import("./NewEventForm").then((module) => ({ default: module.NewEventForm }))
+);
+export const LazyNewMemoryForm = lazy(() =>
+  import("./NewMemoryForm").then((module) => ({ default: module.NewMemoryForm }))
+);
+export const LazySettingsForm = lazy(() =>
+  import("./SettingsForm").then((module) => ({ default: module.SettingsForm }))
+);
+export const LazyNewExpenseForm = lazy(() =>
+  import("./NewExpenseForm").then((module) => ({ default: module.NewExpenseForm }))
+);
