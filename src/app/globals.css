@@ -223,3 +223,24 @@
 .smooth-opacity {
   transition: opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
+
+/* Optimize motion components */
+.motion-optimized {
+  will-change: transform, opacity;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+/* Reduce motion for performance */
+@media (prefers-reduced-motion: reduce) {
+  .motion-optimized {
+    will-change: auto;
+    transform: none;
+  }
+
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

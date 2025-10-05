@@ -80,7 +80,8 @@ export function OptimizedImage({
         blurDataURL={blurDataURL}
         className={`transition-opacity duration-300 ${
           isLoading && !priority ? "opacity-0" : "opacity-100"
-        }`}
+        } ${fill ? "h-full w-full" : ""}`}
+        style={fill ? { objectFit: "cover" } : undefined}
         onLoad={handleLoad}
         onError={handleError}
         onClick={onClick}

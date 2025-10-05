@@ -2,8 +2,9 @@ import type { Metadata } from "next";
 import { Poppins } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "../lib/AuthProvider";
-import { PerformanceMonitor } from "../components/PerformanceMonitor";
+import { PerformanceMonitorOptimized } from "../components/PerformanceMonitorOptimized";
 import { generateMetadata as generateAppMetadata } from "./metadata";
+import { SimpleMemoryOptimizer } from "../components/SimpleMemoryOptimizer";
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -65,10 +66,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
         />
 
-        {/* Theme color */}
-        <meta name="theme-color" content="#14b8a6" />
-        <meta name="color-scheme" content="light dark" />
-
         {/* Additional meta tags */}
         <meta name="format-detection" content="telephone=no" />
         <meta name="mobile-web-app-capable" content="yes" />
@@ -78,7 +75,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
         {/* Security headers */}
         <meta httpEquiv="X-Content-Type-Options" content="nosniff" />
-        <meta httpEquiv="X-Frame-Options" content="DENY" />
         <meta httpEquiv="X-XSS-Protection" content="1; mode=block" />
 
         {/* Service Worker Registration */}
@@ -103,7 +99,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className={`${poppins.variable} font-poppins`}>
         <AuthProvider>
           {children}
-          <PerformanceMonitor />
+          <PerformanceMonitorOptimized />
+          <SimpleMemoryOptimizer />
         </AuthProvider>
       </body>
     </html>

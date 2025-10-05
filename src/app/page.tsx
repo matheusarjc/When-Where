@@ -57,6 +57,7 @@ import { UserProfile } from "../lib/types";
 import { getCurrentUser, logout, followUser, unfollowUser } from "../lib/auth";
 import { createTrip, listenUserTrips, TripDoc } from "../lib/trips";
 import { useLocalStorage } from "../hooks/useLocalStorage";
+import { VirtualList } from "../components/VirtualList";
 
 interface UserSettings {
   name: string;
@@ -962,12 +963,22 @@ END:VCALENDAR`;
                     Criar viagem
                   </Button>
                 </div>
+              ) : displayTrips.length > 20 ? (
+                <VirtualList
+                  items={displayTrips}
+                  renderItem={(trip, index) => (
+                    <TripCard {...trip} onClick={() => handleViewTrip(trip.id)} index={index} />
+                  )}
+                  itemHeight={320}
+                  containerHeight={600}
+                  className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+                />
               ) : (
                 <motion.div
                   variants={containerVariants}
                   initial="hidden"
                   animate="show"
-                  className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 motion-optimized">
                   {displayTrips.map((trip, index) => (
                     <motion.div key={trip.id} variants={itemVariants}>
                       <TripCard {...trip} onClick={() => handleViewTrip(trip.id)} index={index} />
@@ -1087,6 +1098,21 @@ END:VCALENDAR`;
                       <div className="py-12 text-center">
                         <p className="text-white/30">Sem memórias ainda</p>
                       </div>
+                    ) : tripMemories.length > 15 ? (
+                      <VirtualList
+                        items={tripMemories}
+                        renderItem={(memory, index) => (
+                          <MemoryCard
+                            key={memory.id}
+                            {...memory}
+                            index={index}
+                            language={userSettings.language}
+                          />
+                        )}
+                        itemHeight={200}
+                        containerHeight={500}
+                        className="grid grid-cols-1 gap-6"
+                      />
                     ) : (
                       <div className="grid grid-cols-1 gap-6">
                         {tripMemories.map((memory, index) => (

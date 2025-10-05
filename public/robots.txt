@@ -1,14 +1,3 @@
 User-agent: *
 Allow: /
-
-# Sitemap
 Sitemap: https://when-where.app/sitemap.xml
-
-# Crawl delay
-Crawl-delay: 1
-
-# Disallow admin areas (se houver)
-Disallow: /admin/
-Disallow: /api/
-Disallow: /_next/
-Disallow: /private/

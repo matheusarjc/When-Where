@@ -38,6 +38,13 @@ const nextConfig: NextConfig = {
   // Otimizações de performance
   experimental: {
     optimizePackageImports: ["lucide-react", "motion/react", "recharts"],
+    // Otimizar imports automáticos
+    optimizeServerReact: true,
+    // Melhorar cache
+    staleTimes: {
+      dynamic: 30,
+      static: 180,
+    },
   },
 
   // Compressão e otimização

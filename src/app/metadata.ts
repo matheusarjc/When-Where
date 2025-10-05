@@ -67,18 +67,8 @@ export function generateMetadata({
       },
     },
 
-    // Viewport
-    viewport: {
-      width: "device-width",
-      initialScale: 1,
-      maximumScale: 5,
-    },
-
-    // Theme
-    themeColor: [
-      { media: "(prefers-color-scheme: light)", color: "#14b8a6" },
-      { media: "(prefers-color-scheme: dark)", color: "#0d9488" },
-    ],
+    // Metadata base
+    metadataBase: new URL("https://when-where.app"),
 
     // Icons
     icons: {
@@ -119,9 +109,6 @@ export function generateMetadata({
 
     // Referrer
     referrer: "origin-when-cross-origin",
-
-    // Color scheme
-    colorScheme: "light dark",
 
     // Other
     other: {
