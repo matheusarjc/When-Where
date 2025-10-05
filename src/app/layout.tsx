@@ -2,9 +2,8 @@ import type { Metadata } from "next";
 import { Poppins } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "../lib/AuthProvider";
-import { PerformanceMonitorOptimized } from "../components/PerformanceMonitorOptimized";
+import { PerformanceToggle } from "../components/PerformanceToggle";
 import { generateMetadata as generateAppMetadata } from "./metadata";
-import { SimpleMemoryOptimizer } from "../components/SimpleMemoryOptimizer";
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -99,8 +98,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className={`${poppins.variable} font-poppins`}>
         <AuthProvider>
           {children}
-          <PerformanceMonitorOptimized />
-          <SimpleMemoryOptimizer />
+          <PerformanceToggle />
         </AuthProvider>
       </body>
     </html>
