@@ -34,9 +34,9 @@ describe("auth localStorage mocks", () => {
     expect(isAuthenticated()).toBe(true);
   });
 
-  it("logout limpa o usuário", () => {
+  it("logout limpa o usuário", async () => {
     setCurrentUser(user as any);
-    logout();
+    await logout();
     expect(getCurrentUser()).toBeNull();
   });
 });

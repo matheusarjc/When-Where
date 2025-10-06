@@ -23,6 +23,10 @@ export interface TripDoc {
 }
 
 export async function createTrip(trip: TripDoc): Promise<string> {
+  if (!db) {
+    throw new Error("Firestore não está disponível");
+  }
+
   const col = collection(db, "trips");
   const docRef = await addDoc(col, {
     userId: trip.userId,
@@ -40,6 +44,13 @@ export async function createTrip(trip: TripDoc): Promise<string> {
 export function listenUserTrips(userId: string, cb: (trips: TripDoc[]) => void) {
   // Verificar se estamos no ambiente correto
   if (typeof window === "undefined") {
+    cb([]);
+    return () => {};
+  }
+
+  // Verificar se o Firestore está disponível
+  if (!db) {
+    console.warn("Firestore não está disponível. Retornando array vazio.");
     cb([]);
     return () => {};
   }
