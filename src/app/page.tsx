@@ -139,8 +139,13 @@ function AppContent() {
       <AuthScreen
         language={userSettings.language}
         onAuth={(user) => {
-          // TODO: Handle auth
-          console.log("User authenticated:", user);
+          // Redirecionar para dashboard imediatamente
+          setShowSuccessAnimation(true);
+          setTimeout(() => {
+            // garantir que a UI esteja pronta
+            // aqui podemos marcar onboarded se desejar fluxo direto
+            setShowSuccessAnimation(false);
+          }, 800);
         }}
       />
     );

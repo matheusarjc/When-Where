@@ -25,6 +25,7 @@ export function AuthScreen({ language, onAuth }: AuthScreenProps) {
   const [isSignup, setIsSignup] = useState(false);
   const [isAuthLoading, setIsAuthLoading] = useState(false);
   const [hydrated, setHydrated] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -37,6 +38,7 @@ export function AuthScreen({ language, onAuth }: AuthScreenProps) {
   const handleGoogleLogin = async () => {
     if (isAuthLoading) return;
     setIsAuthLoading(true);
+    setErrorMsg(null);
     try {
       // Evitar chamadas quando Firebase não está configurado
       if (!auth || !googleProvider) {
@@ -77,7 +79,7 @@ export function AuthScreen({ language, onAuth }: AuthScreenProps) {
         }
         return;
       }
-      throw err;
+      setErrorMsg("Falha ao autenticar com Google. Tente novamente.");
     } finally {
       setIsAuthLoading(false);
     }
@@ -85,50 +87,77 @@ export function AuthScreen({ language, onAuth }: AuthScreenProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setErrorMsg(null);
     if (!auth) {
       console.warn("Firebase Auth não configurado. Login via email/senha indisponível.");
       return;
     }
-    if (isSignup) {
-      const cred = await createUserWithEmailAndPassword(auth, formData.email, formData.password);
-      if (formData.fullName) {
-        try {
-          await updateProfile(cred.user, { displayName: formData.fullName });
-        } catch {}
+    try {
+      if (isSignup) {
+        const cred = await createUserWithEmailAndPassword(auth, formData.email, formData.password);
+        if (formData.fullName) {
+          try {
+            await updateProfile(cred.user, { displayName: formData.fullName });
+          } catch {}
+        }
+        const profile: UserProfile = {
+          id: cred.user.uid,
+          email: cred.user.email || formData.email,
+          fullName: formData.fullName || formData.username,
+          username:
+            formData.username || formData.email.split("@")[0] || `user${cred.user.uid.slice(0, 6)}`,
+          isPublic: true,
+          createdAt: new Date(),
+          following: [],
+          followers: [],
+          pendingRequests: [],
+        };
+        await upsertUserProfile(profile);
+        setCurrentUser(profile);
+        onAuth(profile);
+      } else {
+        const cred = await signInWithEmailAndPassword(auth, formData.email, formData.password);
+        const u = cred.user;
+        const usernameFromEmail = (u.email || "").split("@")[0] || `user${u.uid.slice(0, 6)}`;
+        const profile: UserProfile = {
+          id: u.uid,
+          email: u.email || formData.email,
+          fullName: u.displayName || usernameFromEmail,
+          username: usernameFromEmail.toLowerCase(),
+          isPublic: true,
+          createdAt: new Date(),
+          following: [],
+          followers: [],
+          pendingRequests: [],
+        };
+        await upsertUserProfile(profile);
+        setCurrentUser(profile);
+        onAuth(profile);
       }
-      const profile: UserProfile = {
-        id: cred.user.uid,
-        email: cred.user.email || formData.email,
-        fullName: formData.fullName || formData.username,
-        username:
-          formData.username || formData.email.split("@")[0] || `user${cred.user.uid.slice(0, 6)}`,
-        isPublic: true,
-        createdAt: new Date(),
-        following: [],
-        followers: [],
-        pendingRequests: [],
-      };
-      await upsertUserProfile(profile);
-      setCurrentUser(profile);
-      onAuth(profile);
-    } else {
-      const cred = await signInWithEmailAndPassword(auth, formData.email, formData.password);
-      const u = cred.user;
-      const usernameFromEmail = (u.email || "").split("@")[0] || `user${u.uid.slice(0, 6)}`;
-      const profile: UserProfile = {
-        id: u.uid,
-        email: u.email || formData.email,
-        fullName: u.displayName || usernameFromEmail,
-        username: usernameFromEmail.toLowerCase(),
-        isPublic: true,
-        createdAt: new Date(),
-        following: [],
-        followers: [],
-        pendingRequests: [],
-      };
-      await upsertUserProfile(profile);
-      setCurrentUser(profile);
-      onAuth(profile);
+    } catch (err: any) {
+      const code = err?.code as string | undefined;
+      switch (code) {
+        case "auth/email-already-in-use":
+          setErrorMsg("Este e-mail já está em uso. Faça login ou use outro e-mail.");
+          break;
+        case "auth/invalid-email":
+          setErrorMsg("E-mail inválido. Verifique e tente novamente.");
+          break;
+        case "auth/weak-password":
+          setErrorMsg("Senha fraca. Use pelo menos 6 caracteres.");
+          break;
+        case "auth/wrong-password":
+          setErrorMsg("Senha incorreta. Tente novamente.");
+          break;
+        case "auth/user-not-found":
+          setErrorMsg("Usuário não encontrado. Crie uma conta primeiro.");
+          break;
+        case "auth/too-many-requests":
+          setErrorMsg("Muitas tentativas. Tente novamente mais tarde.");
+          break;
+        default:
+          setErrorMsg("Ocorreu um erro. Tente novamente.");
+      }
     }
   };
 
@@ -178,6 +207,13 @@ export function AuthScreen({ language, onAuth }: AuthScreenProps) {
                 {isSignup ? t("auth.signupSubtitle", language) : t("auth.subtitle", language)}
               </p>
             </div>
+
+            {/* Erro */}
+            {errorMsg && (
+              <div className="mb-4 p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-300 text-sm">
+                {errorMsg}
+              </div>
+            )}
 
             {/* Google Sign In */}
             <Button
