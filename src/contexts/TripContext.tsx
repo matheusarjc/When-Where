@@ -182,7 +182,7 @@ export function TripProvider({ children }: { children: ReactNode }) {
       const updated = {
         ...trip,
         collaborators: trip.collaborators.map((c) =>
-          c.userId === userId ? { ...c, role: "editor" } : c
+          c.userId === userId ? { ...c, role: "editor" as TripRole } : c
         ),
       };
       setTrips(trips.map((t) => (t.id === tripId ? updated : t)));
@@ -199,7 +199,7 @@ export function TripProvider({ children }: { children: ReactNode }) {
       const updated = {
         ...trip,
         collaborators: trip.collaborators.map((c) =>
-          c.userId === userId ? { ...c, role: "viewer" } : c
+          c.userId === userId ? { ...c, role: "viewer" as TripRole } : c
         ),
       };
       setTrips(trips.map((t) => (t.id === tripId ? updated : t)));
