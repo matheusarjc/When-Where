@@ -38,6 +38,13 @@ export function AuthScreen({ language, onAuth }: AuthScreenProps) {
     if (isAuthLoading) return;
     setIsAuthLoading(true);
     try {
+      // Evitar chamadas quando Firebase não está configurado
+      if (!auth || !googleProvider) {
+        console.warn(
+          "Firebase Auth não configurado. Verifique variáveis NEXT_PUBLIC_* no ambiente de produção."
+        );
+        return;
+      }
       const result = await signInWithPopup(auth, googleProvider);
       const u = result.user;
       const usernameFromEmail = (u.email || "").split("@")[0] || `user${u.uid.slice(0, 6)}`;
@@ -65,7 +72,9 @@ export function AuthScreen({ language, onAuth }: AuthScreenProps) {
       }
       if (code === "auth/popup-blocked") {
         // Fallback para redirect em navegadores que bloqueiam popup
-        await signInWithRedirect(auth, googleProvider);
+        if (auth && googleProvider) {
+          await signInWithRedirect(auth, googleProvider);
+        }
         return;
       }
       throw err;
@@ -76,6 +85,10 @@ export function AuthScreen({ language, onAuth }: AuthScreenProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!auth) {
+      console.warn("Firebase Auth não configurado. Login via email/senha indisponível.");
+      return;
+    }
     if (isSignup) {
       const cred = await createUserWithEmailAndPassword(auth, formData.email, formData.password);
       if (formData.fullName) {
