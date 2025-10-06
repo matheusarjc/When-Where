@@ -346,16 +346,6 @@ export function NewTripForm({ onClose, onSave }: NewTripFormProps) {
                 />
               </div>
               {error && <p className="text-red-400 text-sm mt-2">{error}</p>}
-              {/* {!previewUrl && (
-                <div className="mt-4 flex items-center gap-3">
-                  <img
-                    src={DEFAULT_COVER}
-                    alt="Capa padrão"
-                    className="w-24 h-16 object-cover rounded-lg border border-white/10"
-                  />
-                  <p className="text-white/50 text-sm">Sem upload, usaremos esta imagem padrão.</p>
-                </div>
-              )} */}
             </div>
           </div>
 

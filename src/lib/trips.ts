@@ -38,6 +38,12 @@ export async function createTrip(trip: TripDoc): Promise<string> {
 }
 
 export function listenUserTrips(userId: string, cb: (trips: TripDoc[]) => void) {
+  // Verificar se estamos no ambiente correto
+  if (typeof window === "undefined") {
+    cb([]);
+    return () => {};
+  }
+
   const colRef = collection(db, "trips");
 
   const mapAndSend = (snap: any) => {
@@ -47,22 +53,46 @@ export function listenUserTrips(userId: string, cb: (trips: TripDoc[]) => void) 
     cb(res);
   };
 
+  // Função para lidar com erros de forma mais robusta
+  const handleError = (err: any) => {
+    if ((err as any)?.code === "failed-precondition") {
+      console.warn("Firestore index ausente para trips; usando fallback sem orderBy.");
+      return true; // Indica que deve tentar fallback
+    } else if ((err as any)?.code === "permission-denied") {
+      console.warn("Permissão negada no Firestore. Usando dados locais.");
+      cb([]);
+      return false; // Não tenta fallback
+    } else {
+      console.error("Erro no Firestore:", err);
+      cb([]);
+      return false; // Não tenta fallback
+    }
+  };
+
   // Tenta usar orderBy (requer índice). Se falhar, refaz sem orderBy.
   let unsub = onSnapshot(
     query(colRef, where("userId", "==", userId), orderBy("createdAt", "desc")),
     mapAndSend,
     (err) => {
-      // Falha por índice ausente → fallback sem orderBy
-      if ((err as any)?.code === "failed-precondition") {
-        // eslint-disable-next-line no-console
-        console.warn("Firestore index ausente para trips; usando fallback sem orderBy.");
+      if (handleError(err)) {
+        // Se deve tentar fallback, faz unsubscribe e tenta sem orderBy
         unsub();
-        unsub = onSnapshot(query(colRef, where("userId", "==", userId)), mapAndSend);
-      } else {
-        // eslint-disable-next-line no-console
-        console.error(err);
+        unsub = onSnapshot(
+          query(colRef, where("userId", "==", userId)),
+          mapAndSend,
+          (fallbackErr) => {
+            handleError(fallbackErr);
+          }
+        );
       }
     }
   );
-  return () => unsub();
+
+  return () => {
+    try {
+      unsub();
+    } catch (e) {
+      // Ignora erros ao fazer unsubscribe
+    }
+  };
 }

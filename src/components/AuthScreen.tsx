@@ -209,6 +209,7 @@ export function AuthScreen({ language, onAuth }: AuthScreenProps) {
                       value={formData.fullName}
                       onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
                       placeholder={t("auth.fullName.placeholder", language)}
+                      autoComplete="name"
                       className="pl-10 bg-white/5 border-white/10 text-white"
                       required
                     />
@@ -229,6 +230,7 @@ export function AuthScreen({ language, onAuth }: AuthScreenProps) {
                         })
                       }
                       placeholder={t("auth.username.placeholder", language)}
+                      autoComplete="username"
                       className="pl-10 bg-white/5 border-white/10 text-white"
                       required
                     />
@@ -246,6 +248,7 @@ export function AuthScreen({ language, onAuth }: AuthScreenProps) {
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   placeholder="seu@email.com"
+                  autoComplete="email"
                   className="pl-10 bg-white/5 border-white/10 text-white"
                   required
                 />
@@ -261,6 +264,7 @@ export function AuthScreen({ language, onAuth }: AuthScreenProps) {
                   value={formData.password}
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                   placeholder="••••••••"
+                  autoComplete="current-password"
                   className="pl-10 bg-white/5 border-white/10 text-white"
                   required
                 />

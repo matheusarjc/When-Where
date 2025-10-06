@@ -64,6 +64,7 @@ export function TripCard({
 
       <div className="relative h-48 w-full overflow-hidden rounded-lg">
         <motion.div
+          className="relative h-full w-full"
           whileHover={{ scale: prefersReducedMotion ? 1 : 1.05 }}
           transition={{ duration: 0.6, ease: "easeOut" }}>
           <OptimizedImage

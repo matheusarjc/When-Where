@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useDebounce } from "./useDebounce";
 
 export function useLocalStorage<T>(
@@ -6,7 +6,7 @@ export function useLocalStorage<T>(
   initialValue: T,
   debounceMs: number = 500
 ): [T, (value: T) => void] {
-  // Estado para o valor atual
+  // Estado para o valor atual - lazy initialization
   const [storedValue, setStoredValue] = useState<T>(() => {
     if (typeof window === "undefined") {
       return initialValue;
@@ -25,6 +25,9 @@ export function useLocalStorage<T>(
 
   // Debounce do valor pendente
   const debouncedValue = useDebounce(pendingValue, debounceMs);
+
+  // Ref para evitar re-criação da função de cleanup
+  const cleanupRef = useRef<(() => void) | null>(null);
 
   // Salvar no localStorage quando o valor debounced mudar
   useEffect(() => {
@@ -51,8 +54,9 @@ export function useLocalStorage<T>(
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === key && e.newValue !== null) {
         try {
-          setStoredValue(JSON.parse(e.newValue));
-          setPendingValue(JSON.parse(e.newValue));
+          const newValue = JSON.parse(e.newValue);
+          setStoredValue(newValue);
+          setPendingValue(newValue);
         } catch (error) {
           console.error(`Error parsing localStorage key "${key}":`, error);
         }
@@ -60,7 +64,13 @@ export function useLocalStorage<T>(
     };
 
     window.addEventListener("storage", handleStorageChange);
-    return () => window.removeEventListener("storage", handleStorageChange);
+
+    // Armazenar função de cleanup no ref
+    cleanupRef.current = () => {
+      window.removeEventListener("storage", handleStorageChange);
+    };
+
+    return cleanupRef.current;
   }, [key]);
 
   return [storedValue, setValue];

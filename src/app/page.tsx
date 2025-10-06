@@ -36,6 +36,11 @@ import { useAppActions } from "../hooks/useAppActions";
 
 function AppContent() {
   const prefersReducedMotion = useReducedMotion();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
   const { userSettings } = useApp();
   const {
     currentView,
@@ -106,30 +111,78 @@ function AppContent() {
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white relative overflow-hidden">
-      {/* Background ambient animation */}
-      <div className="fixed inset-0 pointer-events-none">
+      {/* Enhanced Background ambient animation */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden">
+        {/* Floating particles */}
+        {[...Array(20)].map((_, i) => {
+          // Usar valores determinísticos baseados no índice para evitar problemas de hidratação
+          const left = (i * 7.3) % 100;
+          const top = (i * 11.7) % 100;
+          const duration = 3 + (i % 4);
+          const delay = (i % 2) * 0.5;
+
+          return (
+            <motion.div
+              key={i}
+              className="absolute w-1 h-1 bg-white/10 rounded-full"
+              style={{
+                left: `${left}%`,
+                top: `${top}%`,
+              }}
+              animate={{
+                y: !mounted || prefersReducedMotion ? 0 : [0, -30, 0],
+                opacity: [0.1, 0.3, 0.1],
+              }}
+              transition={{
+                duration,
+                repeat: Infinity,
+                delay,
+                ease: "easeInOut",
+              }}
+            />
+          );
+        })}
+
+        {/* Main gradient orbs */}
         <motion.div
-          className="absolute top-0 right-0 w-96 h-96 bg-teal-500/5 rounded-full blur-3xl"
+          className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-teal-500/10 to-cyan-500/5 rounded-full blur-3xl"
           animate={{
-            scale: prefersReducedMotion ? 1 : [1, 1.2, 1],
-            opacity: [0.3, 0.5, 0.3],
+            scale: !mounted || prefersReducedMotion ? 1 : [1, 1.3, 1],
+            opacity: [0.2, 0.4, 0.2],
+            x: !mounted || prefersReducedMotion ? 0 : [0, 50, 0],
+            y: !mounted || prefersReducedMotion ? 0 : [0, -30, 0],
           }}
           transition={{
-            duration: 8,
+            duration: 12,
             repeat: Infinity,
             ease: "easeInOut",
           }}
         />
         <motion.div
-          className="absolute bottom-0 left-0 w-96 h-96 bg-purple-500/5 rounded-full blur-3xl"
+          className="absolute bottom-0 left-0 w-96 h-96 bg-gradient-to-tr from-purple-500/10 to-pink-500/5 rounded-full blur-3xl"
           animate={{
-            scale: prefersReducedMotion ? 1 : [1.2, 1, 1.2],
-            opacity: [0.5, 0.3, 0.5],
+            scale: !mounted || prefersReducedMotion ? 1 : [1.2, 1, 1.2],
+            opacity: [0.3, 0.5, 0.3],
+            x: !mounted || prefersReducedMotion ? 0 : [0, -40, 0],
+            y: !mounted || prefersReducedMotion ? 0 : [0, 20, 0],
           }}
           transition={{
-            duration: 10,
+            duration: 15,
             repeat: Infinity,
             ease: "easeInOut",
+          }}
+        />
+        <motion.div
+          className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-gradient-to-r from-blue-500/5 to-indigo-500/5 rounded-full blur-2xl"
+          animate={{
+            scale: !mounted || prefersReducedMotion ? 1 : [1, 1.1, 1],
+            opacity: [0.1, 0.2, 0.1],
+            rotate: !mounted || prefersReducedMotion ? 0 : [0, 360],
+          }}
+          transition={{
+            duration: 20,
+            repeat: Infinity,
+            ease: "linear",
           }}
         />
       </div>

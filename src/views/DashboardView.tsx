@@ -2,15 +2,7 @@
 
 import { useMemo } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "motion/react";
-import {
-  Plus,
-  MapPin,
-  Search,
-  User,
-  ImageIcon,
-  StickyNote,
-  DollarSign,
-} from "lucide-react";
+import { Plus, MapPin, Search, User, ImageIcon, StickyNote, DollarSign } from "lucide-react";
 
 import { TripCard } from "../components/TripCard";
 import { Countdown } from "../components/Countdown";
@@ -110,14 +102,12 @@ export function DashboardView() {
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       className="max-w-5xl mx-auto px-4 py-8 relative z-10">
-      
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: prefersReducedMotion ? 0 : -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ type: "spring", stiffness: 300, damping: 30 }}
         className="mb-12">
-        
         <div className="flex items-center justify-between mb-12">
           <div>
             <h1 className="mb-3">
@@ -183,7 +173,6 @@ export function DashboardView() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="mb-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          
           <QuickAction
             icon={ImageIcon}
             title="Galeria"
@@ -193,12 +182,12 @@ export function DashboardView() {
             index={0}
             gradient="bg-gradient-to-br from-purple-500 to-pink-500"
           />
-          
+
           <QuickAction
             icon={StickyNote}
             title="Checklist"
             description="Organize sua viagem"
-            count={checklistItems.filter((i) => !i.completed).length}
+            count={checklistItems.filter((i: any) => !i.completed).length}
             onClick={() => {
               if (displayTrips.length > 0) {
                 handleViewTrip(displayTrips[0].id);
@@ -210,7 +199,7 @@ export function DashboardView() {
             index={1}
             gradient="bg-gradient-to-br from-teal-500 to-cyan-500"
           />
-          
+
           <QuickAction
             icon={DollarSign}
             title="Despesas"
@@ -220,7 +209,7 @@ export function DashboardView() {
             index={2}
             gradient="bg-gradient-to-br from-amber-500 to-orange-500"
           />
-          
+
           <QuickAction
             icon={MapPin}
             title="Nova Viagem"
@@ -238,10 +227,9 @@ export function DashboardView() {
         initial="hidden"
         animate="show"
         className="space-y-16">
-        
         <div>
           <h2 className="mb-8">Minhas viagens</h2>
-          
+
           {displayTrips.length === 0 ? (
             <div className="py-16 text-center">
               <div className="mb-6 inline-flex p-4 rounded-full bg-white/5">
@@ -270,7 +258,6 @@ export function DashboardView() {
               initial="hidden"
               animate="show"
               className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 motion-optimized">
-              
               {displayTrips.map((trip, index) => (
                 <motion.div key={trip.id} variants={itemVariants}>
                   <TripCard {...trip} onClick={() => handleViewTrip(trip.id)} index={index} />

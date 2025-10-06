@@ -22,11 +22,11 @@ interface UIContextType extends UIState {
   setSearchQuery: (query: string) => void;
   setActiveFilter: (filter: FilterType) => void;
   setActiveTripTab: (tab: "timeline" | "memories" | "expenses" | "gallery" | "checklist") => void;
-  
+
   // Profile state
   selectedProfile: UserProfile | null;
   setSelectedProfile: (profile: UserProfile | null) => void;
-  
+
   // Actions
   showToast: (message: string, type: "success" | "error" | "info") => void;
   closeAllModals: () => void;
@@ -52,13 +52,20 @@ export function UIProvider({ children }: { children: ReactNode }) {
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFilter, setActiveFilter] = useState<FilterType>("all");
-  const [activeTripTab, setActiveTripTab] = useState<"timeline" | "memories" | "expenses" | "gallery" | "checklist">("timeline");
-  
+  const [activeTripTab, setActiveTripTab] = useState<
+    "timeline" | "memories" | "expenses" | "gallery" | "checklist"
+  >("timeline");
+
   // Actions
   const showToast = useCallback((message: string, type: "success" | "error" | "info") => {
     setToast({ message, type });
+
+    // Auto-dismiss após 3 segundos
+    setTimeout(() => {
+      setToast(null);
+    }, 3000);
   }, []);
-  
+
   const closeAllModals = useCallback(() => {
     setShowNewTripForm(false);
     setShowNewEventForm(false);
@@ -68,17 +75,17 @@ export function UIProvider({ children }: { children: ReactNode }) {
     setShowProfileMenu(false);
     setShowSearchUsers(false);
   }, []);
-  
+
   const navigateToTrip = useCallback((tripId: string) => {
     setSelectedTripId(tripId);
     setCurrentView("trip");
   }, []);
-  
+
   const navigateToDashboard = useCallback(() => {
     setCurrentView("dashboard");
     setSelectedTripId(null);
   }, []);
-  
+
   const value: UIContextType = {
     currentView,
     selectedTripId,
@@ -117,7 +124,7 @@ export function UIProvider({ children }: { children: ReactNode }) {
     navigateToTrip,
     navigateToDashboard,
   };
-  
+
   return <UIContext.Provider value={value}>{children}</UIContext.Provider>;
 }
 

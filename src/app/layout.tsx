@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { Poppins } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "../lib/AuthProvider";
-import { PerformanceToggle } from "../components/PerformanceToggle";
 import { generateMetadata as generateAppMetadata } from "./metadata";
 
 const poppins = Poppins({
@@ -96,10 +95,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
       </head>
       <body className={`${poppins.variable} font-poppins`}>
-        <AuthProvider>
-          {children}
-          <PerformanceToggle />
-        </AuthProvider>
+        <AuthProvider>{children}</AuthProvider>
       </body>
     </html>
   );
