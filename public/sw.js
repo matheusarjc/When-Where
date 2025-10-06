@@ -2,19 +2,8 @@ const CACHE_NAME = "when-where-v1";
 const STATIC_CACHE = "when-where-static-v1";
 const DYNAMIC_CACHE = "when-where-dynamic-v1";
 
-// Assets to cache immediately
-const STATIC_ASSETS = [
-  "/",
-  "/manifest.json",
-  "/favicon.ico",
-  "/favicon-16x16.png",
-  "/favicon-32x32.png",
-  "/apple-touch-icon.png",
-  "/android-chrome-192x192.png",
-  "/android-chrome-512x512.png",
-  "/_next/static/css/",
-  "/_next/static/js/",
-];
+// Assets to cache immediately (somente arquivos que existem no /public)
+const STATIC_ASSETS = ["/", "/manifest.json", "/favicon.ico", "/offline.html"];
 
 // API endpoints to cache
 const API_CACHE_PATTERNS = [
@@ -30,9 +19,15 @@ self.addEventListener("install", (event) => {
   event.waitUntil(
     caches
       .open(STATIC_CACHE)
-      .then((cache) => {
+      .then(async (cache) => {
         console.log("Service Worker: Caching static assets");
-        return cache.addAll(STATIC_ASSETS);
+        for (const asset of STATIC_ASSETS) {
+          try {
+            await cache.add(asset);
+          } catch (e) {
+            console.warn("Service Worker: failed to cache asset", asset, e);
+          }
+        }
       })
       .then(() => {
         console.log("Service Worker: Static assets cached");
