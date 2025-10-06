@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Offline - When & Where</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+        color: white;
+        height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+      }
+
+      .container {
+        max-width: 500px;
+        padding: 2rem;
+      }
+
+      .icon {
+        width: 80px;
+        height: 80px;
+        margin: 0 auto 2rem;
+        background: rgba(20, 184, 166, 0.2);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+      }
+
+      h1 {
+        font-size: 2rem;
+        margin-bottom: 1rem;
+        color: #14b8a6;
+      }
+
+      p {
+        font-size: 1.1rem;
+        line-height: 1.6;
+        margin-bottom: 2rem;
+        opacity: 0.8;
+      }
+
+      .button {
+        background: #14b8a6;
+        color: white;
+        padding: 0.75rem 2rem;
+        border: none;
+        border-radius: 0.5rem;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: all 0.2s;
+        text-decoration: none;
+        display: inline-block;
+      }
+
+      .button:hover {
+        background: #0d9488;
+        transform: translateY(-2px);
+      }
+
+      .features {
+        margin-top: 2rem;
+        text-align: left;
+      }
+
+      .feature {
+        display: flex;
+        align-items: center;
+        margin-bottom: 1rem;
+        opacity: 0.7;
+      }
+
+      .feature-icon {
+        width: 20px;
+        height: 20px;
+        margin-right: 0.75rem;
+        color: #14b8a6;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="icon">📱</div>
+
+      <h1>Você está offline</h1>
+
+      <p>
+        Parece que você perdeu a conexão com a internet. Algumas funcionalidades podem estar
+        limitadas, mas você ainda pode acessar suas viagens salvas localmente.
+      </p>
+
+      <a href="/" class="button" onclick="window.location.reload()"> Tentar novamente </a>
+
+      <div class="features">
+        <div class="feature">
+          <span class="feature-icon">✓</span>
+          <span>Suas viagens salvas estão disponíveis</span>
+        </div>
+        <div class="feature">
+          <span class="feature-icon">✓</span>
+          <span>Contagem regressiva continua funcionando</span>
+        </div>
+        <div class="feature">
+          <span class="feature-icon">✓</span>
+          <span>Memórias locais acessíveis</span>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // Auto-retry when connection is restored
+      window.addEventListener("online", () => {
+        window.location.reload();
+      });
+
+      // Show retry button after 5 seconds
+      setTimeout(() => {
+        const button = document.querySelector(".button");
+        button.textContent = "Tentar novamente";
+        button.style.display = "inline-block";
+      }, 5000);
+    </script>
+  </body>
+</html>
