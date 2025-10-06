@@ -244,10 +244,3 @@
     transition-duration: 0.01ms !important;
   }
 }
-
-/* Custom gradient classes for hydration safety */
-.bg-gradient-radial-teal-purple {
-  background-image: radial-gradient(circle at 20% 50%, rgba(20, 184, 166, 0.3) 0%, transparent 50%), radial-gradient(circle at 80% 80%, rgba(139, 92, 246, 0.3) 0%, transparent 50%);
-  background-size: 200% 200%;
-  background-position: 0% 0%;
-}

@@ -123,14 +123,14 @@ export function AuthScreen({ language, onAuth }: AuthScreenProps) {
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center p-4">
       {/* Animated background */}
       <div className="absolute inset-0 overflow-hidden">
-        <div 
+        <div
           className="absolute inset-0 opacity-20"
           style={{
-            backgroundImage: "radial-gradient(circle at 20% 50%, rgba(20, 184, 166, 0.3) 0%, transparent 50%), radial-gradient(circle at 80% 80%, rgba(139, 92, 246, 0.3) 0%, transparent 50%)",
+            backgroundImage:
+              "radial-gradient(circle at 20% 50%, rgba(20, 184, 166, 0.3) 0%, transparent 50%), radial-gradient(circle at 80% 80%, rgba(139, 92, 246, 0.3) 0%, transparent 50%)",
             backgroundSize: "200% 200%",
             backgroundPosition: "0% 0%",
-          }}
-        >
+          }}>
           {hydrated && (
             <motion.div
               className="absolute inset-0"
@@ -156,16 +156,7 @@ export function AuthScreen({ language, onAuth }: AuthScreenProps) {
             {/* Logo/Header */}
             <div className="text-center mb-8">
               <div className="inline-flex p-4 rounded-full bg-gradient-to-br from-teal-500 to-cyan-500 mb-4">
-                {hydrated ? (
-                  <motion.div
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    transition={{ type: "spring", delay: 0.2 }}>
-                    <Sparkles className="w-8 h-8 text-white" />
-                  </motion.div>
-                ) : (
-                  <Sparkles className="w-8 h-8 text-white" />
-                )}
+                <Sparkles className="w-8 h-8 text-white" />
               </div>
               <h1 className="text-white mb-2">
                 {isSignup ? t("auth.signupTitle", language) : t("auth.welcome", language)}

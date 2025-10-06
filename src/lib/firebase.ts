@@ -1,7 +1,6 @@
 import { initializeApp, getApp, getApps } from "firebase/app";
 import { getAuth, GoogleAuthProvider } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
-import { getStorage } from "firebase/storage";
 
 // Verificar se estamos no ambiente correto e se as variáveis estão definidas
 const isClient = typeof window !== "undefined";
@@ -21,7 +20,6 @@ let app: any = null;
 let auth: any = null;
 let googleProvider: any = null;
 let db: any = null;
-let storage: any = null;
 
 if (!isDevMode && (isClient || process.env.NEXT_PUBLIC_FIREBASE_API_KEY)) {
   try {
@@ -29,7 +27,6 @@ if (!isDevMode && (isClient || process.env.NEXT_PUBLIC_FIREBASE_API_KEY)) {
     auth = getAuth(app);
     googleProvider = new GoogleAuthProvider();
     db = getFirestore(app);
-    storage = getStorage(app);
   } catch (error) {
     console.warn("Firebase initialization failed:", error);
     // Em caso de erro, criar objetos mock para desenvolvimento
@@ -37,8 +34,7 @@ if (!isDevMode && (isClient || process.env.NEXT_PUBLIC_FIREBASE_API_KEY)) {
     auth = null;
     googleProvider = null;
     db = null;
-    storage = null;
   }
 }
 
-export { auth, googleProvider, db, storage };
+export { auth, googleProvider, db };

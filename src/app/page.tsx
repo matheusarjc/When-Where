@@ -39,6 +39,57 @@ function AppContent() {
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => setHydrated(true), []);
+
+  // Bloqueia chamadas acidentais ao Firebase Storage em dev para identificar origem
+  useEffect(() => {
+    if (process.env.NODE_ENV !== "production" && typeof window !== "undefined") {
+      const originalFetch = window.fetch;
+      window.fetch = async (...args: Parameters<typeof fetch>) => {
+        try {
+          const input = args[0];
+          let urlString: string | undefined;
+          if (typeof input === "string") urlString = input;
+          else if (input instanceof Request) urlString = input.url;
+          else if (input instanceof URL) urlString = input.toString();
+          if (urlString && urlString.includes("firebasestorage.googleapis.com")) {
+            console.warn("[BLOCKED:DEV] Attempted fetch to Firebase Storage:", urlString);
+            throw new Error("Firebase Storage desabilitado em desenvolvimento");
+          }
+        } catch {}
+        return (originalFetch as any).apply(window, args as any);
+      };
+
+      const originalXHROpen = XMLHttpRequest.prototype.open;
+      (XMLHttpRequest.prototype.open as any) = function (
+        this: XMLHttpRequest,
+        method: string,
+        url: string,
+        async?: boolean,
+        user?: string | null,
+        password?: string | null
+      ) {
+        try {
+          if (typeof url === "string" && url.includes("firebasestorage.googleapis.com")) {
+            console.warn("[BLOCKED:DEV] Attempted XHR to Firebase Storage:", url);
+            throw new Error("Firebase Storage desabilitado em desenvolvimento");
+          }
+        } catch {}
+        return originalXHROpen.call(
+          this as any,
+          method,
+          url,
+          !!async,
+          user ?? undefined,
+          password ?? undefined
+        );
+      };
+
+      return () => {
+        window.fetch = originalFetch;
+        (XMLHttpRequest.prototype.open as any) = originalXHROpen as any;
+      };
+    }
+  }, []);
   const { userSettings } = useApp();
   const {
     currentView,
@@ -61,6 +112,8 @@ function AppContent() {
     setShowSettings,
     selectedProfile,
     setSelectedProfile,
+    navigateToTrip,
+    setActiveTripTab,
   } = useUI();
 
   const { currentUser, displayTrips } = useAppData();
@@ -251,7 +304,10 @@ function AppContent() {
               trips={displayTrips}
               expenses={expenses}
               language={userSettings.language}
-              onSelectTrip={(tripId) => console.log("Select trip:", tripId)}
+              onSelectTrip={(tripId) => {
+                navigateToTrip(tripId);
+                setActiveTripTab("expenses");
+              }}
               onBack={() => console.log("Back to dashboard")}
             />
           </Suspense>
