@@ -19,7 +19,7 @@ const STATIC_ASSETS = [
 // API endpoints to cache
 const API_CACHE_PATTERNS = [
   /^https:\/\/firestore\.googleapis\.com/,
-  /^https:\/\/firebasestorage\.googleapis\.com/,
+  // Firebase Storage removido do cache para evitar requests indesejados
   /^https:\/\/images\.unsplash\.com/,
 ];
 
