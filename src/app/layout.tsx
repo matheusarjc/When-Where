@@ -51,7 +51,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {/* Preconnect to external domains */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link rel="preconnect" href="https://firebasestorage.googleapis.com" />
         <link rel="preconnect" href="https://firestore.googleapis.com" />
 
         {/* DNS prefetch */}
@@ -75,19 +74,27 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta httpEquiv="X-Content-Type-Options" content="nosniff" />
         <meta httpEquiv="X-XSS-Protection" content="1; mode=block" />
 
-        {/* Service Worker Registration */}
+        {/* Service Worker Registration (prod only) and unregister in development */}
         <script
           dangerouslySetInnerHTML={{
             __html: `
               if ('serviceWorker' in navigator) {
                 window.addEventListener('load', function() {
-                  navigator.serviceWorker.register('/sw.js')
-                    .then(function(registration) {
-                      console.log('SW registered: ', registration);
-                    })
-                    .catch(function(registrationError) {
-                      console.log('SW registration failed: ', registrationError);
+                  var isProd = ${process.env.NODE_ENV === "production" ? "true" : "false"};
+                  if (isProd) {
+                    navigator.serviceWorker.register('/sw.js')
+                      .then(function(registration) {
+                        console.log('SW registered: ', registration);
+                      })
+                      .catch(function(registrationError) {
+                        console.log('SW registration failed: ', registrationError);
+                      });
+                  } else {
+                    navigator.serviceWorker.getRegistrations().then(function(registrations) {
+                      registrations.forEach(function(reg) { reg.unregister(); });
+                      console.log('SW unregistered in development');
                     });
+                  }
                 });
               }
             `,

@@ -11,7 +11,11 @@ interface AuthContextValue {
   loading: boolean;
 }
 
-const AuthContext = createContext<AuthContextValue>({ user: null, firebaseUser: null, loading: true });
+const AuthContext = createContext<AuthContextValue>({
+  user: null,
+  firebaseUser: null,
+  loading: true,
+});
 
 export function useAuth() {
   return useContext(AuthContext);
@@ -23,6 +27,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Verificar se o Firebase está disponível
+    if (!auth) {
+      setLoading(false);
+      return;
+    }
+
     const unsub = onAuthStateChanged(auth, async (u) => {
       setFirebaseUser(u);
       if (!u) {
@@ -54,7 +64,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => unsub();
   }, []);
 
-  return <AuthContext.Provider value={{ user, firebaseUser, loading }}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={{ user, firebaseUser, loading }}>{children}</AuthContext.Provider>
+  );
 }
-
-

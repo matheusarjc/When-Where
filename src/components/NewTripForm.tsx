@@ -1,13 +1,10 @@
 "use client";
-import { useEffect, useRef, useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { X } from "lucide-react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
-import { storage } from "../lib/firebase";
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import DefaultCover from "../assets/Default_BgFallback.png";
-import { OptimizedLoading } from "./OptimizedLoading";
 import { motion } from "motion/react";
 
 interface NewTripFormProps {
@@ -29,74 +26,15 @@ export function NewTripForm({ onClose, onSave }: NewTripFormProps) {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [selectedCover, setSelectedCover] = useState<string>(DEFAULT_COVER);
-  const [uploading, setUploading] = useState(false);
-  const [file, setFile] = useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [isDragging, setIsDragging] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const [error, setError] = useState<string | null>(null);
-  const [uploadProgress, setUploadProgress] = useState(0);
 
   // Memoizar validação do formulário
   const isFormValid = useMemo(() => {
     return title.trim() && location.trim() && startDate && endDate;
   }, [title, location, startDate, endDate]);
 
-  // Otimizar limpeza de recursos
-  useEffect(() => {
-    return () => {
-      if (previewUrl) {
-        URL.revokeObjectURL(previewUrl);
-      }
-    };
-  }, [previewUrl]);
-
-  // Função otimizada para redimensionar imagem
-  const resizeImage = useCallback((file: File): Promise<File> => {
-    return new Promise((resolve) => {
-      const canvas = document.createElement("canvas");
-      const ctx = canvas.getContext("2d");
-      const img = new Image();
-
-      img.onload = () => {
-        const maxWidth = 1000;
-        const maxHeight = 200;
-        let { width, height } = img;
-
-        if (width > maxWidth || height > maxHeight) {
-          const ratio = Math.min(maxWidth / width, maxHeight / height);
-          width *= ratio;
-          height *= ratio;
-        }
-
-        canvas.width = width;
-        canvas.height = height;
-
-        ctx?.drawImage(img, 0, 0, width, height);
-
-        canvas.toBlob(
-          (blob) => {
-            if (blob) {
-              const resizedFile = new File([blob], file.name, {
-                type: "image/jpeg",
-                lastModified: Date.now(),
-              });
-              resolve(resizedFile);
-            } else {
-              resolve(file);
-            }
-          },
-          "image/jpeg",
-          0.8
-        );
-      };
-
-      img.src = URL.createObjectURL(file);
-    });
-  }, []);
-
   const handleSubmit = useCallback(
-    async (e: React.FormEvent) => {
+    (e: React.FormEvent) => {
       e.preventDefault();
 
       if (!isFormValid) {
@@ -104,103 +42,16 @@ export function NewTripForm({ onClose, onSave }: NewTripFormProps) {
         return;
       }
 
-      let coverUrl = selectedCover;
-
-      if (file) {
-        try {
-          setUploading(true);
-          setUploadProgress(0);
-          setError(null);
-
-          // Simular progresso do upload
-          const progressInterval = setInterval(() => {
-            setUploadProgress((prev) => Math.min(prev + 10, 90));
-          }, 100);
-
-          const key = `trip-covers/${Date.now()}-${file.name}`;
-          const storageRef = ref(storage, key);
-          const blob = await resizeImageToCover(file, 1000, 200);
-          await uploadBytes(storageRef, blob, { contentType: blob.type });
-          coverUrl = await getDownloadURL(storageRef);
-
-          clearInterval(progressInterval);
-          setUploadProgress(100);
-
-          // Pequeno delay para mostrar progresso completo
-          await new Promise((resolve) => setTimeout(resolve, 200));
-        } catch (error) {
-          console.error("Erro ao fazer upload:", error);
-          setError("Erro ao fazer upload da imagem");
-          setUploading(false);
-          setUploadProgress(0);
-          return;
-        } finally {
-          setUploading(false);
-        }
-      }
-
       onSave({
         title,
         location,
         startDate,
         endDate,
-        coverUrl,
+        coverUrl: selectedCover,
       });
     },
-    [title, location, startDate, endDate, selectedCover, file, isFormValid, onSave]
+    [title, location, startDate, endDate, selectedCover, isFormValid, onSave]
   );
-
-  function validateAndPreview(f: File | null) {
-    if (!f) return;
-    const allowed = ["image/jpeg", "image/png"];
-    if (!allowed.includes(f.type)) {
-      setError("Formato inválido. Use JPEG ou PNG.");
-      return;
-    }
-    if (f.size > 2 * 1024 * 1024) {
-      setError("Arquivo muito grande. Máximo 2 MB.");
-      return;
-    }
-    setError(null);
-    setFile(f);
-    const url = URL.createObjectURL(f);
-    if (previewUrl) URL.revokeObjectURL(previewUrl);
-    setPreviewUrl(url);
-    setSelectedCover("");
-  }
-
-  async function resizeImageToCover(file: File, width: number, height: number): Promise<Blob> {
-    const img = await new Promise<HTMLImageElement>((resolve, reject) => {
-      const i = new Image();
-      i.onload = () => resolve(i);
-      i.onerror = reject as any;
-      i.src = URL.createObjectURL(file);
-    });
-    const srcRatio = img.width / img.height;
-    const dstRatio = width / height;
-    let sx = 0;
-    let sy = 0;
-    let sWidth = img.width;
-    let sHeight = img.height;
-    if (srcRatio > dstRatio) {
-      sWidth = Math.round(img.height * dstRatio);
-      sx = Math.round((img.width - sWidth) / 2);
-    } else if (srcRatio < dstRatio) {
-      sHeight = Math.round(img.width / dstRatio);
-      sy = Math.round((img.height - sHeight) / 2);
-    }
-    const canvas = document.createElement("canvas");
-    canvas.width = width;
-    canvas.height = height;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) throw new Error("Canvas not supported");
-    ctx.drawImage(img, sx, sy, sWidth, sHeight, 0, 0, width, height);
-    const blob: Blob = await new Promise((resolve) =>
-      canvas.toBlob((b) => resolve((b as Blob) || new Blob()), "image/jpeg", 0.92)
-    );
-    URL.revokeObjectURL(img.src);
-    return blob;
-  }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
@@ -223,6 +74,7 @@ export function NewTripForm({ onClose, onSave }: NewTripFormProps) {
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Ex: Verão em Roma"
+              autoComplete="off"
               required
               className="bg-white/5 border-white/10"
             />
@@ -235,6 +87,7 @@ export function NewTripForm({ onClose, onSave }: NewTripFormProps) {
               value={location}
               onChange={(e) => setLocation(e.target.value)}
               placeholder="Ex: Roma, Itália"
+              autoComplete="off"
               required
               className="bg-white/5 border-white/10"
             />
@@ -248,6 +101,7 @@ export function NewTripForm({ onClose, onSave }: NewTripFormProps) {
                 type="date"
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
+                autoComplete="off"
                 required
                 className="bg-white/5 border-white/10 text-xs lg:text-base"
               />
@@ -260,6 +114,7 @@ export function NewTripForm({ onClose, onSave }: NewTripFormProps) {
                 type="date"
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
+                autoComplete="off"
                 required
                 className="bg-white/5 border-white/10 text-xs lg:text-base"
               />
@@ -270,118 +125,98 @@ export function NewTripForm({ onClose, onSave }: NewTripFormProps) {
             <Label>Escolha uma imagem de capa</Label>
 
             <div className="pt-3">
-              <div
-                onDragOver={(e) => {
-                  e.preventDefault();
-                  setIsDragging(true);
-                }}
-                onDragLeave={() => setIsDragging(false)}
-                onDrop={(e) => {
-                  e.preventDefault();
-                  setIsDragging(false);
-                  const f = e.dataTransfer.files?.[0];
-                  if (f) validateAndPreview(f);
-                }}
-                className={`rounded-2xl p-6 border-2 ${
-                  isDragging
-                    ? "border-teal-400 bg-teal-500/5"
-                    : "border-dashed border-white/10 bg-white/5"
-                } text-center transition-colors`}>
-                {previewUrl ? (
-                  <>
-                    <img
-                      src={previewUrl}
-                      alt="Preview da capa"
-                      className="w-full h-40 object-cover rounded-lg mb-4"
-                    />
-                    <div className="flex gap-3 justify-center">
-                      <button
-                        type="button"
-                        onClick={() => fileInputRef.current?.click()}
-                        className="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white">
-                        Alterar
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setFile(null);
-                          if (previewUrl) URL.revokeObjectURL(previewUrl);
-                          setPreviewUrl(null);
-                          setSelectedCover(DEFAULT_COVER);
-                        }}
-                        className="px-4 py-2 rounded-lg bg-white/10 hover:bg-white/15 text-white">
-                        Excluir
-                      </button>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                {[
+                  {
+                    url: "https://images.unsplash.com/photo-1488646953014-85cb44e25828?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHx0cmF2ZWwlMjBiYWNrZ3JvdW5kfGVufDF8fHx8MTc1OTM2MjAwNXww&ixlib=rb-4.1.0&q=80&w=400",
+                    title: "Aventura",
+                  },
+                  {
+                    url: "https://images.unsplash.com/photo-1469474968028-56623f02e42e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxuYXR1cmUlMjBsYW5kc2NhcGV8ZW58MXx8fHwxNzU5MzYyMDA1fDA&ixlib=rb-4.1.0&q=80&w=400",
+                    title: "Natureza",
+                  },
+                  {
+                    url: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxtb3VudGFpbnxlbnwxfHx8fDE3NTkzNjIwMDV8MA&ixlib=rb-4.1.0&q=80&w=400",
+                    title: "Montanhas",
+                  },
+                  {
+                    url: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxiZWFjaHxlbnwxfHx8fDE3NTkzNjIwMDV8MA&ixlib=rb-4.1.0&q=80&w=400",
+                    title: "Praia",
+                  },
+                  {
+                    url: "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxmb3Jlc3R8ZW58MXx8fHwxNzU5MzYyMDA1fDA&ixlib=rb-4.1.0&q=80&w=400",
+                    title: "Floresta",
+                  },
+                  {
+                    url: "https://images.unsplash.com/photo-1501594907352-04cda38ebc29?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxjaXR5fGVufDF8fHx8MTc1OTM2MjAwNXww&ixlib=rb-4.1.0&q=80&w=400",
+                    title: "Cidade",
+                  },
+                ].map((image, index) => (
+                  <button
+                    key={index}
+                    type="button"
+                    onClick={() => setSelectedCover(image.url)}
+                    className={`relative aspect-video rounded-lg overflow-hidden border-2 transition-all ${
+                      selectedCover === image.url
+                        ? "border-teal-400 ring-2 ring-teal-400/20"
+                        : "border-white/10 hover:border-white/20"
+                    }`}>
+                    <img src={image.url} alt={image.title} className="w-full h-full object-cover" />
+                    <div className="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
+                      <span className="text-white text-sm font-medium">{image.title}</span>
                     </div>
-                  </>
-                ) : (
-                  <>
-                    <div className="mx-auto mb-4 w-12 h-12 rounded-full bg-white/10 flex items-center justify-center">
-                      <svg width="24" height="24" viewBox="0 0 24 24" className="text-white/70">
-                        <path
-                          fill="currentColor"
-                          d="M19 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2m-1 12l-2.5-3l-1.5 2l-2-3l-3 4H6v2h12z"
-                        />
-                      </svg>
-                    </div>
-                    <label
-                      htmlFor="coverUpload"
-                      className="inline-block px-5 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white cursor-pointer">
-                      Upload
-                    </label>
-                    <p className="text-white/60 mt-4">Ou arraste e solte a imagem aqui</p>
-                    <p className="text-white/30 text-sm mt-2">size: 1000×200 px Max: 2 MB</p>
-                  </>
-                )}
-                <input
-                  ref={fileInputRef}
-                  id="coverUpload"
-                  type="file"
-                  accept="image/jpeg,image/png"
+                    {selectedCover === image.url && (
+                      <div className="absolute top-2 right-2 w-6 h-6 bg-teal-400 rounded-full flex items-center justify-center">
+                        <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                          <path
+                            fillRule="evenodd"
+                            d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                            clipRule="evenodd"
+                          />
+                        </svg>
+                      </div>
+                    )}
+                  </button>
+                ))}
+              </div>
+
+              <div className="mt-4">
+                <Label htmlFor="customImageUrl">Ou use uma URL personalizada</Label>
+                <Input
+                  id="customImageUrl"
+                  type="url"
+                  placeholder="https://exemplo.com/imagem.jpg"
+                  autoComplete="off"
+                  className="bg-white/5 border-white/10 text-white mt-2"
                   onChange={(e) => {
-                    const f = e.target.files?.[0] || null;
-                    if (f) validateAndPreview(f);
+                    if (e.target.value) {
+                      setSelectedCover(e.target.value);
+                    }
                   }}
-                  className="hidden"
                 />
               </div>
-              {error && <p className="text-red-400 text-sm mt-2">{error}</p>}
             </div>
           </div>
+
+          {error && (
+            <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
+              <p className="text-red-400 text-sm">{error}</p>
+            </div>
+          )}
 
           <div className="flex gap-3 pt-4">
             <Button
               type="button"
-              variant="outline"
               onClick={onClose}
-              className="flex-1"
-              disabled={uploading}>
+              variant="outline"
+              className="flex-1 bg-white/5 border-white/10 text-white hover:bg-white/10">
               Cancelar
             </Button>
-            <div className="flex-1 relative">
-              <Button
-                type="submit"
-                disabled={uploading || !isFormValid}
-                className="w-full bg-teal-400 text-black hover:bg-teal-500 disabled:opacity-60">
-                {uploading ? (
-                  <div className="flex items-center gap-2">
-                    <OptimizedLoading size="sm" variant="spinner" />
-                    <span>Enviando... {uploadProgress}%</span>
-                  </div>
-                ) : (
-                  "Criar Viagem"
-                )}
-              </Button>
-
-              {/* Barra de progresso */}
-              {uploading && (
-                <motion.div
-                  initial={{ width: 0 }}
-                  animate={{ width: `${uploadProgress}%` }}
-                  className="absolute bottom-0 left-0 h-1 bg-teal-300 rounded-full"
-                />
-              )}
-            </div>
+            <Button
+              type="submit"
+              className="flex-1 bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 text-white">
+              Criar Viagem
+            </Button>
           </div>
         </form>
       </div>

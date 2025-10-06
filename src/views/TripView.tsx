@@ -14,6 +14,7 @@ import { Button } from "../components/ui/button";
 import { OptimizedLoading } from "../components/OptimizedLoading";
 import { VirtualList } from "../components/VirtualList";
 import { LazyPhotoGallery, LazyExpenseManager } from "../components/LazyComponent";
+import { TripCollaborators } from "../components/TripCollaborators";
 import { useApp } from "../contexts/AppContext";
 import { useUI } from "../contexts/UIContext";
 import { useTrip } from "../contexts/TripContext";
@@ -41,6 +42,9 @@ export function TripView() {
     addChecklistItem,
     toggleChecklistItem,
     deleteChecklistItem,
+    inviteCollaborator,
+    promoteToAdmin,
+    demoteFromAdmin,
   } = useTrip();
 
   if (!selectedTrip) {
@@ -295,22 +299,19 @@ export function TripView() {
           )}
         </div>
 
-        {/* Sidebar */}
+        {/* Sidebar (somente colaboradores) */}
         <div className="space-y-6">
-          {/* Collaborators */}
-          <Suspense
-            fallback={
-              <OptimizedLoading size="sm" variant="spinner" message="Carregando colaboradores..." />
-            }>
-            <LazyExpenseManager
-              expenses={tripExpenses}
-              language={userSettings.language}
-              tripId={selectedTrip.id}
-              tripTitle={selectedTrip.title}
-              onBack={handleBackToDashboard}
-              onAddExpense={() => setShowNewExpenseForm(true)}
-            />
-          </Suspense>
+          <TripCollaborators
+            tripId={selectedTrip.id}
+            ownerId={selectedTrip.userId}
+            currentUserId={selectedTrip.userId}
+            collaborators={selectedTrip.collaborators}
+            invitedUsers={selectedTrip.invitedUsers}
+            language={userSettings.language}
+            onInvite={(userId) => inviteCollaborator(selectedTrip.id, userId)}
+            onPromote={(userId) => promoteToAdmin(selectedTrip.id, userId)}
+            onDemote={(userId) => demoteFromAdmin(selectedTrip.id, userId)}
+          />
         </div>
       </div>
     </motion.div>

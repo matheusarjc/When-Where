@@ -3,6 +3,11 @@ import { db } from "./firebase";
 import { UserProfile } from "./types";
 
 export async function upsertUserProfile(profile: UserProfile): Promise<void> {
+  if (!db) {
+    console.warn("Firestore não está disponível. Usando armazenamento local.");
+    return;
+  }
+
   const ref = doc(db, "users", profile.id);
   await setDoc(
     ref,
@@ -22,6 +27,11 @@ export async function upsertUserProfile(profile: UserProfile): Promise<void> {
 }
 
 export async function getUserProfile(uid: string): Promise<Partial<UserProfile> | null> {
+  if (!db) {
+    console.warn("Firestore não está disponível. Retornando null.");
+    return null;
+  }
+
   const ref = doc(db, "users", uid);
   const snap = await getDoc(ref);
   if (!snap.exists()) return null;
@@ -36,5 +46,3 @@ export async function getUserProfile(uid: string): Promise<Partial<UserProfile> 
     isPublic: !!data.isPublic,
   };
 }
-
-

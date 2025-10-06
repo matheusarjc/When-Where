@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "motion/react";
 import { Plus, MapPin, Search, User, ImageIcon, StickyNote, DollarSign } from "lucide-react";
 
@@ -14,6 +14,9 @@ import { useApp } from "../contexts/AppContext";
 import { useUI } from "../contexts/UIContext";
 import { useAppData } from "../hooks/useAppData";
 import { useTrip } from "../contexts/TripContext";
+import { useAuth } from "../lib/AuthProvider";
+import { logout } from "../lib/auth";
+import { Trip } from "../types/app.types";
 
 // Animation variants
 const containerVariants = {
@@ -35,6 +38,7 @@ export function DashboardView() {
   const prefersReducedMotion = useReducedMotion();
   const { currentUser, userSettings, displayTrips, expenses, checklistItems } = useAppData();
   const { pendingInvites } = useTrip();
+  const { user: authUser } = useAuth();
   const {
     showProfileMenu,
     setShowProfileMenu,
@@ -47,12 +51,14 @@ export function DashboardView() {
   } = useUI();
 
   // Memoizar computações derivadas
-  const nextTrip = useMemo(() => {
+  const [nextTrip, setNextTrip] = useState<Trip | null>(null);
+
+  useEffect(() => {
     const now = new Date();
     const upcomingTrips = displayTrips
       .filter((trip) => new Date(trip.startDate) > now)
       .sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime());
-    return upcomingTrips[0] || null;
+    setNextTrip(upcomingTrips[0] || null);
   }, [displayTrips]);
 
   const filteredMemories = useMemo(() => {
@@ -83,17 +89,33 @@ export function DashboardView() {
     setCurrentView("profile");
   };
 
-  const handleLogout = () => {
-    // Lógica de logout
-    console.log("Logout");
+  const handleLogout = async () => {
+    try {
+      // Executar logout do Firebase e limpar dados locais
+      await logout();
+
+      // Mostrar toast de sucesso
+      showToast("Logout realizado com sucesso!", "success");
+
+      // Fechar menu de perfil se estiver aberto
+      setShowProfileMenu(false);
+
+      // Redirecionar para tela de login (será feito automaticamente pelo AuthProvider)
+      console.log("Logout realizado com sucesso");
+    } catch (error) {
+      console.error("Erro durante logout:", error);
+      showToast("Erro durante logout. Tente novamente.", "error");
+    }
   };
 
-  const getGreeting = () => {
+  const [greeting, setGreeting] = useState("Bom dia");
+
+  useEffect(() => {
     const hour = new Date().getHours();
-    if (hour < 12) return "Bom dia";
-    if (hour < 18) return "Boa tarde";
-    return "Boa noite";
-  };
+    if (hour < 12) setGreeting("Bom dia");
+    else if (hour < 18) setGreeting("Boa tarde");
+    else setGreeting("Boa noite");
+  }, []);
 
   return (
     <motion.div
@@ -107,11 +129,11 @@ export function DashboardView() {
         initial={{ opacity: 0, y: prefersReducedMotion ? 0 : -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ type: "spring", stiffness: 300, damping: 30 }}
-        className="mb-12">
+        className="py-8">
         <div className="flex items-center justify-between mb-12">
           <div>
             <h1 className="mb-3">
-              {getGreeting()}, {userSettings.name}
+              {greeting}, {userSettings.name}
             </h1>
             {nextTrip && (
               <p className="text-white/40">

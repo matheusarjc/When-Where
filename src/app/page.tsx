@@ -36,10 +36,59 @@ import { useAppActions } from "../hooks/useAppActions";
 
 function AppContent() {
   const prefersReducedMotion = useReducedMotion();
-  const [mounted, setMounted] = useState(false);
+  const [hydrated, setHydrated] = useState(false);
 
+  useEffect(() => setHydrated(true), []);
+
+  // Bloqueia chamadas acidentais ao Firebase Storage em dev para identificar origem
   useEffect(() => {
-    setMounted(true);
+    if (process.env.NODE_ENV !== "production" && typeof window !== "undefined") {
+      const originalFetch = window.fetch;
+      window.fetch = async (...args: Parameters<typeof fetch>) => {
+        try {
+          const input = args[0];
+          let urlString: string | undefined;
+          if (typeof input === "string") urlString = input;
+          else if (input instanceof Request) urlString = input.url;
+          else if (input instanceof URL) urlString = input.toString();
+          if (urlString && urlString.includes("firebasestorage.googleapis.com")) {
+            console.warn("[BLOCKED:DEV] Attempted fetch to Firebase Storage:", urlString);
+            throw new Error("Firebase Storage desabilitado em desenvolvimento");
+          }
+        } catch {}
+        return (originalFetch as any).apply(window, args as any);
+      };
+
+      const originalXHROpen = XMLHttpRequest.prototype.open;
+      (XMLHttpRequest.prototype.open as any) = function (
+        this: XMLHttpRequest,
+        method: string,
+        url: string,
+        async?: boolean,
+        user?: string | null,
+        password?: string | null
+      ) {
+        try {
+          if (typeof url === "string" && url.includes("firebasestorage.googleapis.com")) {
+            console.warn("[BLOCKED:DEV] Attempted XHR to Firebase Storage:", url);
+            throw new Error("Firebase Storage desabilitado em desenvolvimento");
+          }
+        } catch {}
+        return originalXHROpen.call(
+          this as any,
+          method,
+          url,
+          !!async,
+          user ?? undefined,
+          password ?? undefined
+        );
+      };
+
+      return () => {
+        window.fetch = originalFetch;
+        (XMLHttpRequest.prototype.open as any) = originalXHROpen as any;
+      };
+    }
   }, []);
   const { userSettings } = useApp();
   const {
@@ -63,6 +112,8 @@ function AppContent() {
     setShowSettings,
     selectedProfile,
     setSelectedProfile,
+    navigateToTrip,
+    setActiveTripTab,
   } = useUI();
 
   const { currentUser, displayTrips } = useAppData();
@@ -114,101 +165,108 @@ function AppContent() {
       {/* Enhanced Background ambient animation */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
         {/* Floating particles */}
-        {[...Array(20)].map((_, i) => {
-          // Usar valores determinísticos baseados no índice para evitar problemas de hidratação
-          const left = (i * 7.3) % 100;
-          const top = (i * 11.7) % 100;
-          const duration = 3 + (i % 4);
-          const delay = (i % 2) * 0.5;
+        {hydrated &&
+          [...Array(20)].map((_, i) => {
+            // Usar valores determinísticos baseados no índice para evitar problemas de hidratação
+            const left = (i * 7.3) % 100;
+            const top = (i * 11.7) % 100;
+            const duration = 3 + (i % 4);
+            const delay = (i % 2) * 0.5;
 
-          return (
+            return (
+              <motion.div
+                key={i}
+                className="absolute w-1 h-1 bg-white/10 rounded-full"
+                style={{
+                  left: `${left}%`,
+                  top: `${top}%`,
+                }}
+                animate={{
+                  y: prefersReducedMotion ? 0 : [0, -30, 0],
+                  opacity: [0.1, 0.3, 0.1],
+                }}
+                transition={{
+                  duration,
+                  repeat: Infinity,
+                  delay,
+                  ease: "easeInOut",
+                }}
+              />
+            );
+          })}
+
+        {/* Main gradient orbs */}
+        {hydrated && (
+          <>
             <motion.div
-              key={i}
-              className="absolute w-1 h-1 bg-white/10 rounded-full"
-              style={{
-                left: `${left}%`,
-                top: `${top}%`,
-              }}
+              className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-teal-500/10 to-cyan-500/5 rounded-full blur-3xl"
               animate={{
-                y: !mounted || prefersReducedMotion ? 0 : [0, -30, 0],
-                opacity: [0.1, 0.3, 0.1],
+                scale: prefersReducedMotion ? 1 : [1, 1.3, 1],
+                opacity: [0.2, 0.4, 0.2],
+                x: prefersReducedMotion ? 0 : [0, 50, 0],
+                y: prefersReducedMotion ? 0 : [0, -30, 0],
               }}
               transition={{
-                duration,
+                duration: 12,
                 repeat: Infinity,
-                delay,
                 ease: "easeInOut",
               }}
             />
-          );
-        })}
-
-        {/* Main gradient orbs */}
-        <motion.div
-          className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-teal-500/10 to-cyan-500/5 rounded-full blur-3xl"
-          animate={{
-            scale: !mounted || prefersReducedMotion ? 1 : [1, 1.3, 1],
-            opacity: [0.2, 0.4, 0.2],
-            x: !mounted || prefersReducedMotion ? 0 : [0, 50, 0],
-            y: !mounted || prefersReducedMotion ? 0 : [0, -30, 0],
-          }}
-          transition={{
-            duration: 12,
-            repeat: Infinity,
-            ease: "easeInOut",
-          }}
-        />
-        <motion.div
-          className="absolute bottom-0 left-0 w-96 h-96 bg-gradient-to-tr from-purple-500/10 to-pink-500/5 rounded-full blur-3xl"
-          animate={{
-            scale: !mounted || prefersReducedMotion ? 1 : [1.2, 1, 1.2],
-            opacity: [0.3, 0.5, 0.3],
-            x: !mounted || prefersReducedMotion ? 0 : [0, -40, 0],
-            y: !mounted || prefersReducedMotion ? 0 : [0, 20, 0],
-          }}
-          transition={{
-            duration: 15,
-            repeat: Infinity,
-            ease: "easeInOut",
-          }}
-        />
-        <motion.div
-          className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-gradient-to-r from-blue-500/5 to-indigo-500/5 rounded-full blur-2xl"
-          animate={{
-            scale: !mounted || prefersReducedMotion ? 1 : [1, 1.1, 1],
-            opacity: [0.1, 0.2, 0.1],
-            rotate: !mounted || prefersReducedMotion ? 0 : [0, 360],
-          }}
-          transition={{
-            duration: 20,
-            repeat: Infinity,
-            ease: "linear",
-          }}
-        />
+            <motion.div
+              className="absolute bottom-0 left-0 w-96 h-96 bg-gradient-to-tr from-purple-500/10 to-pink-500/5 rounded-full blur-3xl"
+              animate={{
+                scale: prefersReducedMotion ? 1 : [1.2, 1, 1.2],
+                opacity: [0.3, 0.5, 0.3],
+                x: prefersReducedMotion ? 0 : [0, -40, 0],
+                y: prefersReducedMotion ? 0 : [0, 20, 0],
+              }}
+              transition={{
+                duration: 15,
+                repeat: Infinity,
+                ease: "easeInOut",
+              }}
+            />
+            <motion.div
+              className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-gradient-to-r from-blue-500/5 to-indigo-500/5 rounded-full blur-2xl"
+              animate={{
+                scale: prefersReducedMotion ? 1 : [1, 1.1, 1],
+                opacity: [0.1, 0.2, 0.1],
+                rotate: prefersReducedMotion ? 0 : [0, 360],
+              }}
+              transition={{
+                duration: 20,
+                repeat: Infinity,
+                ease: "linear",
+              }}
+            />
+          </>
+        )}
       </div>
 
       {/* Success celebration animation */}
-      <AnimatePresence>
-        {showSuccessAnimation && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.8 }}
-            className="fixed inset-0 flex items-center justify-center z-50 pointer-events-none">
+      {hydrated && (
+        <AnimatePresence>
+          {showSuccessAnimation && (
             <motion.div
-              initial={{ scale: 0 }}
-              animate={{ scale: [0, 1.2, 1] }}
-              transition={{ duration: 0.5, times: [0, 0.6, 1] }}
-              className="bg-teal-500/20 backdrop-blur-sm rounded-full p-12">
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.8 }}
+              className="fixed inset-0 flex items-center justify-center z-50 pointer-events-none">
               <motion.div
-                animate={{ rotate: prefersReducedMotion ? 0 : [0, 10, -10, 0] }}
-                transition={{ duration: 0.5, delay: 0.2 }}>
-                <Sparkles className="w-16 h-16 text-teal-400" />
+                initial={{ scale: 0 }}
+                animate={{ scale: [0, 1.2, 1] }}
+                transition={{ duration: 0.5, times: [0, 0.6, 1] }}
+                className="bg-teal-500/20 backdrop-blur-sm rounded-full p-12">
+                <motion.div
+                  animate={{ rotate: prefersReducedMotion ? 0 : [0, 10, -10, 0] }}
+                  transition={{ duration: 0.5, delay: 0.2 }}>
+                  <Sparkles className="w-16 h-16 text-teal-400" />
+                </motion.div>
               </motion.div>
             </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+          )}
+        </AnimatePresence>
+      )}
 
       {/* Pending invites */}
       {pendingInvites.length > 0 && (
@@ -246,7 +304,10 @@ function AppContent() {
               trips={displayTrips}
               expenses={expenses}
               language={userSettings.language}
-              onSelectTrip={(tripId) => console.log("Select trip:", tripId)}
+              onSelectTrip={(tripId) => {
+                navigateToTrip(tripId);
+                setActiveTripTab("expenses");
+              }}
               onBack={() => console.log("Back to dashboard")}
             />
           </Suspense>
